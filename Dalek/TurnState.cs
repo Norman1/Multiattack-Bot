@@ -8,21 +8,19 @@ namespace WarLight.Shared.AI.Dalek
 {
     public class TurnState
     {
-        public MapDetails Map;
         public int NumberOfTurns;
         public Dictionary<PlayerIDType, PlayerIncome> Incomes;
         public GameOrder[] PrevTurn;
         public GameStanding LatestTurnStanding;
         public GameStanding PreviousTurnStanding;
 
-        public TurnState(MapDetails map, int numberOfTurns,
+        public TurnState(int numberOfTurns,
             Dictionary<PlayerIDType, PlayerIncome> incomes,
             GameOrder[] prevTurn,
             GameStanding latestTurnStanding,
             GameStanding previousTurnStanding
             )
         {
-            Map = map;
             NumberOfTurns = numberOfTurns;
             Incomes = incomes;
             PrevTurn = prevTurn;

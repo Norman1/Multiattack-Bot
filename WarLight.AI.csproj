@@ -47,8 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Dalek\Evaluation\" />
-    <Folder Include="Dalek\Utils\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -93,8 +91,10 @@
     <Compile Include="Dalek\BotMain.cs" />
     <Compile Include="Dalek\Decision\MovesChooser.cs" />
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
+    <Compile Include="Dalek\Evaluation\MapEvaluator.cs" />
     <Compile Include="Dalek\GameState.cs" />
     <Compile Include="Dalek\TurnState.cs" />
+    <Compile Include="Dalek\Utils\MapInformer.cs" />
     <Compile Include="Prod\BonusPath.cs" />
     <Compile Include="Prod\BotMain.cs" />
     <Compile Include="Prod\MakeOrders\DefendAttack.cs" />
