@@ -15,7 +15,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             Moves.Add(move);
         }
 
-        public List<GameOrder> getAllGameOrders()
+        public List<GameOrder> GetAllGameOrders()
         {
             return Moves.Select(o => o.Move).ToList();
         }
