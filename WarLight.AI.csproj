@@ -47,6 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Dalek\Evaluation\" />
+    <Folder Include="Dalek\Utils\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +90,11 @@
     <Compile Include="Cowzow\Move\BotOrder.cs" />
     <Compile Include="Cowzow\Move\BotOrderAttackTransfer.cs" />
     <Compile Include="Cowzow\Move\BotOrderDeploy.cs" />
+    <Compile Include="Dalek\BotMain.cs" />
+    <Compile Include="Dalek\Decision\MovesChooser.cs" />
+    <Compile Include="Dalek\Decision\PicksChooser.cs" />
+    <Compile Include="Dalek\GameState.cs" />
+    <Compile Include="Dalek\TurnState.cs" />
     <Compile Include="Prod\BonusPath.cs" />
     <Compile Include="Prod\BotMain.cs" />
     <Compile Include="Prod\MakeOrders\DefendAttack.cs" />
