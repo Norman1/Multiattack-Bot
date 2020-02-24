@@ -19,29 +19,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
             return multiMoves.GetAllGameOrders();
         }
 
-        private void GetAttackMoves(MultiMoves multiMoves)
-        {
-            var afterStandings = multiMoves.Moves.Last().AfterStandings;
-            foreach (var territoryStanding in afterStandings.Values)
-            {
-                if (territoryStanding.OwnerPlayerID != GameState.MyPlayerId)
-                {
-                    continue;
-                }
-                int armiesAvailable = territoryStanding.NumArmies.ArmiesOrZero - 1;
-                if (armiesAvailable == 0)
-                {
-                    continue;
-                }
-                List<TerritoryIDType> neighbors = MapInformer.GetNeighborTerritories(territoryStanding.ID);
-                TerritoryIDType randomNeighbor = neighbors.Random();
-                Armies attackArmies = new Armies(armiesAvailable);
-                GameOrder order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryStanding.ID, randomNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
-                SingleMove singleAttackMove = new SingleMove(afterStandings, order);
-                multiMoves.AddMove(singleAttackMove);
-            }
-        }
-
         private void GetDeployMoves(MultiMoves multiMoves)
         {
             TurnState currentTurn = GameState.CurrentTurn();
@@ -52,6 +29,42 @@ namespace WarLight.Shared.AI.Dalek.Decision
             GameOrder order = GameOrderDeploy.Create(GameState.MyPlayerId, freeArmies, randomTerritory, true);
             SingleMove singleDeployMove = new SingleMove(gameStanding.Territories, order);
             multiMoves.AddMove(singleDeployMove);
+        }
+
+        // Fehler: verschiedene moves beeinflussen sich nicht (innere schleife)???
+        private void GetAttackMoves(MultiMoves multiMoves)
+        {
+            for (int i = 0; i <= 5; i++)
+            {
+                var afterStandings = multiMoves.Moves.Last().AfterStandings;
+
+                foreach (var territoryStanding in afterStandings.Values)
+                {
+                    if (territoryStanding.OwnerPlayerID != GameState.MyPlayerId)
+                    {
+                        continue;
+                    }
+                    int armiesAvailable = territoryStanding.NumArmies.ArmiesOrZero - 1;
+                    if (armiesAvailable == 0)
+                    {
+                        continue;
+                    }
+                    var nonOwnedNeighbors = MapInformer.GetNonOwnedNeighborTerritories(territoryStanding.ID, afterStandings);
+                    if (nonOwnedNeighbors.Count == 0)
+                    {
+                        continue;
+                    }
+                    var randomNeighbor = nonOwnedNeighbors.Random();
+                    Armies attackArmies = new Armies(armiesAvailable);
+                    GameOrder order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryStanding.ID, randomNeighbor.Key, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
+                    // TODO falsch, afterStandings. before = last single attack executed
+                    // SingleMove singleAttackMove = new SingleMove(afterStandings, order);
+                    SingleMove singleAttackMove = new SingleMove(multiMoves.Moves.Last().AfterStandings, order);
+                    multiMoves.AddMove(singleAttackMove);
+                }
+
+            }
+
         }
 
 

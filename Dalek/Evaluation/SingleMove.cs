@@ -34,7 +34,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             }
             else if (gameOrder is GameOrderAttackTransfer)
             {
-                HandleAttackOrder(newStandings, (GameOrderAttackTransfer)gameOrder);
+                HandleMoveOrder(newStandings, (GameOrderAttackTransfer)gameOrder);
             }
             return newStandings;
         }
@@ -47,9 +47,49 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             deployTerritory.NumArmies = newArmies;
         }
 
+        private void HandleMoveOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
+        {
+            var from = territoryStandings[attackOrder.From];
+            var to = territoryStandings[attackOrder.To];
+            bool isTransfer = from.OwnerPlayerID == to.OwnerPlayerID;
+            if (isTransfer)
+            {
+                HandleTransferOrder(territoryStandings, attackOrder);
+            }
+            else
+            {
+                HandleAttackOrder(territoryStandings, attackOrder);
+
+            }
+        }
+
+        private void HandleTransferOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
+        {
+            // TODO no transfer multiattack possible
+            var from = territoryStandings[attackOrder.From];
+            var to = territoryStandings[attackOrder.To];
+            from.NumArmies = new Armies(from.NumArmies.ArmiesOrZero - attackOrder.NumArmies.ArmiesOrZero);
+            to.NumArmies = new Armies(to.NumArmies.ArmiesOrZero + attackOrder.NumArmies.ArmiesOrZero);
+        }
+
         private void HandleAttackOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
         {
-            // TODO
+            var from = territoryStandings[attackOrder.From];
+            var to = territoryStandings[attackOrder.To];
+            int armiesInAttackingTerritory = from.NumArmies.ArmiesOrZero;
+            int defendingArmies = to.NumArmies.ArmiesOrZero;
+            int armies = attackOrder.NumArmies.ArmiesOrZero;
+            AttackOutcome attackOutcome = new AttackOutcome(armiesInAttackingTerritory, armies, defendingArmies);
+            from.NumArmies = new Armies(attackOutcome.RemainingArmiesAttackingTerritory);
+            if (attackOutcome.IsTerritoryTaken)
+            {
+                to.OwnerPlayerID = GameState.MyPlayerId;
+                to.NumArmies = new Armies(attackOutcome.NewArmiesDefendingTerritoryAttacker);
+            }
+            else
+            {
+                to.NumArmies = new Armies(attackOutcome.RemainingArmiesDefendingTerritoryDefender);
+            }
         }
 
 

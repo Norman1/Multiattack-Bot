@@ -22,6 +22,21 @@ namespace WarLight.Shared.AI.Dalek.Utils
             return connectedTerritoryIds;
         }
 
+        public static Dictionary<TerritoryIDType, TerritoryStanding> GetNonOwnedNeighborTerritories(TerritoryIDType territory, Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings)
+        {
+            List<TerritoryIDType> neighborTerritories = GetNeighborTerritories(territory);
+            Dictionary<TerritoryIDType, TerritoryStanding> outDict = new Dictionary<TerritoryIDType, TerritoryStanding>();
+            foreach (TerritoryIDType neighbor in neighborTerritories)
+            {
+                if (territoryStandings[neighbor].OwnerPlayerID != GameState.MyPlayerId)
+                {
+                    outDict.Add(neighbor, territoryStandings[neighbor]);
+                }
+            }
+
+            return outDict;
+        }
+
         public static TerritoryStanding GetTerritory(List<TerritoryStanding> territoryStandings, TerritoryIDType territoryId)
         {
             return territoryStandings.Where(o => o.ID.GetValue() == territoryId.GetValue()).First();

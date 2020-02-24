@@ -20,8 +20,8 @@ namespace WarLight.Shared.AI.Dalek.Utils
         {
             double offenceKillRate = GameState.GameSettings.OffenseKillRate;
             double defenceKillRate = GameState.GameSettings.DefenseKillRate;
-            int attackerArmiesKill = Convert.ToInt32(Math.Round(defendingArmies * defenceKillRate));
-            int defenderArmiesKill = Convert.ToInt32(Math.Round(attackingArmies * offenceKillRate));
+            int attackerArmiesKill = Convert.ToInt32(Math.Round(attackingArmies * offenceKillRate));
+            int defenderArmiesKill = Convert.ToInt32(Math.Round(defendingArmies * defenceKillRate));
 
 
             IsTerritoryTaken = attackerArmiesKill >= defendingArmies && !(defenderArmiesKill >= attackingArmies);
@@ -36,7 +36,7 @@ namespace WarLight.Shared.AI.Dalek.Utils
             }
 
             AttackerKilledArmies = Math.Min(attackerArmiesKill, defendingArmies);
-            // edge case sicne for example in case of a 1v1 attack the defender keeps his 1 army
+            // edge case since for example in case of a 1v1 attack the defender keeps his 1 army
             if (IsTerritoryTaken && AttackerKilledArmies >= defendingArmies)
             {
                 AttackerKilledArmies--;
