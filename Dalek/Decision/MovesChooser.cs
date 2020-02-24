@@ -13,32 +13,47 @@ namespace WarLight.Shared.AI.Dalek.Decision
     {
         public List<GameOrder> GetMoves()
         {
+            MultiMoves multiMoves = new MultiMoves();
+            GetDeployMoves(multiMoves);
+            GetAttackMoves(multiMoves);
+            return multiMoves.GetAllGameOrders();
+        }
+
+        private void GetAttackMoves(MultiMoves multiMoves)
+        {
+            var afterStandings = multiMoves.Moves.Last().AfterStandings;
+            foreach (var territoryStanding in afterStandings.Values)
+            {
+                if (territoryStanding.OwnerPlayerID != GameState.MyPlayerId)
+                {
+                    continue;
+                }
+                int armiesAvailable = territoryStanding.NumArmies.ArmiesOrZero - 1;
+                if (armiesAvailable == 0)
+                {
+                    continue;
+                }
+                List<TerritoryIDType> neighbors = MapInformer.GetNeighborTerritories(territoryStanding.ID);
+                TerritoryIDType randomNeighbor = neighbors.Random();
+                Armies attackArmies = new Armies(armiesAvailable);
+                GameOrder order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryStanding.ID, randomNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
+                SingleMove singleAttackMove = new SingleMove(afterStandings, order);
+                multiMoves.AddMove(singleAttackMove);
+            }
+        }
+
+        private void GetDeployMoves(MultiMoves multiMoves)
+        {
             TurnState currentTurn = GameState.CurrentTurn();
             int freeArmies = currentTurn.GetMyIncome();
             GameStanding gameStanding = currentTurn.LatestTurnStanding;
             List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-            // Add a single deploy order and move the armies from that territory to a neighboring one
-            TerritoryIDType randomTerritory = ownedTerritories.Last();
+            TerritoryIDType randomTerritory = ownedTerritories.Random();
             GameOrder order = GameOrderDeploy.Create(GameState.MyPlayerId, freeArmies, randomTerritory, true);
-
-            List<TerritoryIDType> neighbors = MapInformer.GetNeighborTerritories(randomTerritory);
-            TerritoryIDType firstNeighbor = neighbors[0];
-            int amountArmies = freeArmies;
-            TerritoryStanding theRandomTerritory = MapInformer.GetTerritory(MapInformer.GetTerritoryStandings(gameStanding), randomTerritory);
-            Armies attackArmies = new Armies(amountArmies + theRandomTerritory.NumArmies.ArmiesOrZero - 1);
-
-            GameOrder order2 = GameOrderAttackTransfer.Create(GameState.MyPlayerId, randomTerritory, firstNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
-
-
-            MultiMoves multiMoves = new MultiMoves();
-            SingleMove singleDeployMove = new SingleMove(MapInformer.GetTerritoryStandings(gameStanding), order);
+            SingleMove singleDeployMove = new SingleMove(gameStanding.Territories, order);
             multiMoves.AddMove(singleDeployMove);
-
-            SingleMove singleAttackMove = new SingleMove(MapInformer.GetTerritoryStandings(gameStanding), order2);
-            multiMoves.AddMove(singleAttackMove);
-
-            return multiMoves.GetAllGameOrders();
         }
+
 
 
 

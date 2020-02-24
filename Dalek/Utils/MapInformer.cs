@@ -27,10 +27,6 @@ namespace WarLight.Shared.AI.Dalek.Utils
             return territoryStandings.Where(o => o.ID.GetValue() == territoryId.GetValue()).First();
         }
 
-        public static List<TerritoryStanding> GetTerritoryStandings(GameStanding gameStanding)
-        {
-            return gameStanding.Territories.Select(o => o.Value).ToList();
-        }
 
     }
 }

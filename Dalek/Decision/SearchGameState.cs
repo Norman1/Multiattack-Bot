@@ -16,7 +16,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
         public List<TerritoryStanding> TerritoryStandings;
 
 
-        public int getBoardValue()
+        public int GetBoardValue()
         {
             return MapEvaluator.Evaluate(TerritoryStandings);
         }

@@ -10,20 +10,24 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
     public class SingleMove
     {
         public GameOrder Move;
-        public List<TerritoryStanding> BeforeStandings;
-        public List<TerritoryStanding> AfterStandings;
+        public Dictionary<TerritoryIDType, TerritoryStanding> BeforeStandings;
+        public Dictionary<TerritoryIDType, TerritoryStanding> AfterStandings;
 
-        public SingleMove(List<TerritoryStanding> beforeStandings, GameOrder move)
+        public SingleMove(Dictionary<TerritoryIDType, TerritoryStanding> beforeStandings, GameOrder move)
         {
             BeforeStandings = beforeStandings;
             Move = move;
             AfterStandings = GetMoveResult(beforeStandings, move);
         }
 
-        private List<TerritoryStanding> GetMoveResult(List<TerritoryStanding> beginStandings, GameOrder gameOrder)
+        private Dictionary<TerritoryIDType, TerritoryStanding> GetMoveResult(Dictionary<TerritoryIDType, TerritoryStanding> beginStandings, GameOrder gameOrder)
         {
-            List<TerritoryStanding> newStandings = new List<TerritoryStanding>();
-            beginStandings.ForEach(o => newStandings.Add(o.Clone()));
+            Dictionary<TerritoryIDType, TerritoryStanding> newStandings = new Dictionary<TerritoryIDType, TerritoryStanding>();
+            foreach (var x in beginStandings)
+            {
+                newStandings.Add(x.Key, x.Value.Clone());
+            }
+
             if (gameOrder is GameOrderDeploy)
             {
                 HandleDeployOrder(newStandings, (GameOrderDeploy)gameOrder);
@@ -35,15 +39,15 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             return newStandings;
         }
 
-        private void HandleDeployOrder(List<TerritoryStanding> territoryStandings, GameOrderDeploy deployOrder)
+        private void HandleDeployOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderDeploy deployOrder)
         {
-            TerritoryStanding deployTerritory = MapInformer.GetTerritory(territoryStandings, deployOrder.DeployOn);
+            TerritoryStanding deployTerritory = territoryStandings[deployOrder.DeployOn];
             int amountNewArmies = deployTerritory.NumArmies.ArmiesOrZero + deployOrder.NumArmies;
             Armies newArmies = new Armies(amountNewArmies);
             deployTerritory.NumArmies = newArmies;
         }
 
-        private void HandleAttackOrder(List<TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
+        private void HandleAttackOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
         {
             // TODO
         }
