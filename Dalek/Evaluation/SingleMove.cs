@@ -52,6 +52,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             var from = territoryStandings[attackOrder.From];
             var to = territoryStandings[attackOrder.To];
             bool isTransfer = from.OwnerPlayerID == to.OwnerPlayerID;
+            from.TerritoriesMarkedAsUsed.Add(to.ID);
             if (isTransfer)
             {
                 HandleTransferOrder(territoryStandings, attackOrder);
@@ -59,17 +60,16 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             else
             {
                 HandleAttackOrder(territoryStandings, attackOrder);
-
             }
         }
 
         private void HandleTransferOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)
         {
-            // TODO no transfer multiattack possible
             var from = territoryStandings[attackOrder.From];
             var to = territoryStandings[attackOrder.To];
             from.NumArmies = new Armies(from.NumArmies.ArmiesOrZero - attackOrder.NumArmies.ArmiesOrZero);
             to.NumArmies = new Armies(to.NumArmies.ArmiesOrZero + attackOrder.NumArmies.ArmiesOrZero);
+            to.ArmiesMarkedAsUsed = new Armies(to.ArmiesMarkedAsUsed.ArmiesOrZero + attackOrder.NumArmies.ArmiesOrZero);
         }
 
         private void HandleAttackOrder(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, GameOrderAttackTransfer attackOrder)

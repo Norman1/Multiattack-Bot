@@ -13,6 +13,8 @@ namespace WarLight.Shared.AI.Dalek.Utils
             return territoryStandings.Where(o => o.OwnerPlayerID == player).ToList();
         }
 
+
+
         public static List<TerritoryIDType> GetNeighborTerritories(TerritoryIDType territory)
         {
             MapDetails map = GameState.Map;
@@ -21,6 +23,15 @@ namespace WarLight.Shared.AI.Dalek.Utils
             List<TerritoryIDType> connectedTerritoryIds = territoryInQuestion.ConnectedTo.Keys.ToList();
             return connectedTerritoryIds;
         }
+
+        public static List<TerritoryIDType> RemoveMarkedAsUsedTerritories(TerritoryStanding territory, List<TerritoryIDType> testTerritories)
+        {
+            List<TerritoryIDType> territoriesMarkedAsUsed = territory.TerritoriesMarkedAsUsed;
+            List<TerritoryIDType> result = new List<TerritoryIDType>();
+            testTerritories.Where(o => !territoriesMarkedAsUsed.Contains(o)).ForEach(x => result.Add(x));
+            return result;
+        }
+
 
         public static Dictionary<TerritoryIDType, TerritoryStanding> GetNonOwnedNeighborTerritories(TerritoryIDType territory, Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings)
         {
