@@ -25,10 +25,16 @@ namespace WarLight.Shared.AI.Dalek.Decision
             int freeArmies = currentTurn.GetMyIncome();
             GameStanding gameStanding = currentTurn.LatestTurnStanding;
             List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-            TerritoryIDType randomTerritory = ownedTerritories.Random();
-            GameOrder order = GameOrderDeploy.Create(GameState.MyPlayerId, freeArmies, randomTerritory, true);
-            SingleMove singleDeployMove = new SingleMove(gameStanding.Territories, order);
-            multiMoves.AddMove(singleDeployMove);
+
+            while (freeArmies > 0)
+            {
+                TerritoryIDType randomTerritory = ownedTerritories.Random();
+                GameOrder order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
+                SingleMove singleDeployMove = new SingleMove(multiMoves.GetGameStateAfterAllMoves(), order);
+                multiMoves.AddMove(singleDeployMove);
+                freeArmies--;
+            }
+
         }
 
         private void GetAttackMoves(MultiMoves multiMoves)
