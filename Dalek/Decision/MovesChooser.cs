@@ -16,7 +16,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
             MultiMoves multiMoves = new MultiMoves();
             GetDeployMoves(multiMoves);
             GetAttackMoves(multiMoves);
-            return multiMoves.GetAllGameOrders();
+            return multiMoves.GetAllMoves();
         }
 
         private void GetDeployMoves(MultiMoves multiMoves)
@@ -29,9 +29,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
             while (freeArmies > 0)
             {
                 TerritoryIDType randomTerritory = ownedTerritories.Random();
-                GameOrder order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
-                SingleMove singleDeployMove = new SingleMove(multiMoves.GetGameStateAfterAllMoves(), order);
-                multiMoves.AddMove(singleDeployMove);
+                GameOrderDeploy order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
+                multiMoves.AddDeployOrder(order);
                 freeArmies--;
             }
 
@@ -39,40 +38,34 @@ namespace WarLight.Shared.AI.Dalek.Decision
 
         private void GetAttackMoves(MultiMoves multiMoves)
         {
+            List<TerritoryIDType> allTerritories = GameState.Map.Territories.Keys.ToList();
             for (int i = 0; i <= 5; i++)
             {
-                var afterStandings = multiMoves.Moves.Last().AfterStandings;
-
-                foreach (var territoryStanding in afterStandings.Values)
+                foreach (TerritoryIDType territoryId in allTerritories)
                 {
-                    if (territoryStanding.OwnerPlayerID != GameState.MyPlayerId)
+                    var afterStandings = multiMoves.GetTerritoryStandingsAfterAllMoves();
+                    TerritoryStanding fromTerritory = afterStandings[territoryId];
+                    if (fromTerritory.OwnerPlayerID != GameState.MyPlayerId)
                     {
                         continue;
                     }
-                    int armiesAvailable = territoryStanding.NumArmies.ArmiesOrZero - 1 - territoryStanding.ArmiesMarkedAsUsed.NumArmies;
+                    int armiesAvailable = fromTerritory.NumArmies.ArmiesOrZero - 1 - fromTerritory.ArmiesMarkedAsUsed.NumArmies;
                     if (armiesAvailable == 0)
                     {
                         continue;
                     }
-                    var neighbors = MapInformer.GetNeighborTerritories(territoryStanding.ID);
-                    var nonUsedNeighbors = MapInformer.RemoveMarkedAsUsedTerritories(territoryStanding, neighbors);
+                    var neighbors = MapInformer.GetNeighborTerritories(territoryId);
+                    var nonUsedNeighbors = MapInformer.RemoveMarkedAsUsedTerritories(fromTerritory, neighbors);
                     if (nonUsedNeighbors.Count == 0)
                     {
                         continue;
                     }
                     var randomNeighbor = nonUsedNeighbors.Random();
                     Armies attackArmies = new Armies(armiesAvailable);
-                    GameOrder order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryStanding.ID, randomNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
-                    SingleMove singleAttackMove = new SingleMove(multiMoves.Moves.Last().AfterStandings, order);
-                    multiMoves.AddMove(singleAttackMove);
+                    GameOrderAttackTransfer order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryId, randomNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
+                    multiMoves.AddAttackOrder(order);
                 }
-
             }
-
         }
-
-
-
-
     }
 }

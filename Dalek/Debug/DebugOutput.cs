@@ -11,10 +11,10 @@ namespace WarLight.Shared.AI.Dalek.Debug
     {
         public static void LogMultiMoves(MultiMoves multiMoves)
         {
-            foreach (SingleMove singleMove in multiMoves.Moves)
-            {
-                AILog.Log("Debug", "After standings count= " + singleMove.AfterStandings.Count());
-            }
+            //   foreach (SingleMove singleMove in multiMoves.Moves)
+            //    {
+            //        AILog.Log("Debug", "After standings count= " + singleMove.AfterStandings.Count());
+            //   }
 
         }
     }

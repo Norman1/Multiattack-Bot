@@ -9,159 +9,81 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
 {
     public class MultiMoves
     {
-        public List<SingleMove> Moves = new List<SingleMove>();
+        public List<GameOrderDeploy> DeployMoves = new List<GameOrderDeploy>();
+        public List<GameOrderAttackTransfer> AttackMoves = new List<GameOrderAttackTransfer>();
 
-        public Dictionary<TerritoryIDType, TerritoryStanding> GetGameStateAfterAllMoves()
+        public void AddDeployOrder(GameOrderDeploy deployOrder)
         {
-            if (Moves.Count == 0)
+            GameOrderDeploy alreadyPresentDeployOrder = DeployMoves.Where(o => o.DeployOn == deployOrder.DeployOn).FirstOrDefault();
+            if (alreadyPresentDeployOrder == null)
             {
-                return GameState.CurrentTurn().LatestTurnStanding.Territories;
-            }
-            return Moves.Last().AfterStandings;
-        }
-
-
-        public void AddMove(SingleMove move)
-        {
-            if (move.Move is GameOrderDeploy)
-            {
-                AddDeployMove(move);
+                DeployMoves.Add(deployOrder);
             }
             else
             {
-                AddAttackMove(move);
+                alreadyPresentDeployOrder.NumArmies += deployOrder.NumArmies;
             }
         }
 
-        private void AddDeployMove(SingleMove move)
+        public void AddAttackOrder(GameOrderAttackTransfer attackOrder)
         {
-            // Step 1: Add the move or merge it if already present
-            GameOrderDeploy deployMove = (GameOrderDeploy)move.Move;
-            List<SingleMove> deployMoves = GetDeployMoves();
-            SingleMove alreadyPresentDeploymentMove = deployMoves.Where(o => ((GameOrderDeploy)o.Move).DeployOn == deployMove.DeployOn).FirstOrDefault();
-            if (alreadyPresentDeploymentMove != null)
+            AttackMoves.Add(attackOrder);
+        }
+
+        public List<GameOrder> GetAllMoves()
+        {
+            List<GameOrder> outMoves = new List<GameOrder>();
+            outMoves.AddRange(DeployMoves);
+            outMoves.AddRange(AttackMoves);
+            return outMoves;
+
+        }
+
+
+        public Dictionary<TerritoryIDType, TerritoryStanding> GetTerritoryStandingsAfterAllMoves()
+        {
+            Dictionary<TerritoryIDType, TerritoryStanding> beginStandings = GameState.CurrentTurn().LatestTurnStanding.Territories;
+            Dictionary<TerritoryIDType, TerritoryStanding> endStandings = new Dictionary<TerritoryIDType, TerritoryStanding>();
+            // init
+            foreach (TerritoryIDType territoryId in beginStandings.Keys)
             {
-                GameOrderDeploy alreadyPresentDeployment = (GameOrderDeploy)alreadyPresentDeploymentMove.Move;
-                alreadyPresentDeployment.NumArmies += deployMove.NumArmies;
+                endStandings.Add(territoryId, beginStandings[territoryId].Clone());
             }
-            else
+            // handle deployments
+            foreach (GameOrderDeploy deployMove in DeployMoves)
             {
-                Moves.Add(move);
+                endStandings[deployMove.DeployOn].NumArmies = new Armies(endStandings[deployMove.DeployOn].NumArmies.ArmiesOrZero + deployMove.NumArmies);
             }
-            // Step 2: Add the armies to all other moves preconditions and postconditions
-            int deployArmies = deployMove.NumArmies;
-            Armies armies = new Armies(deployArmies);
-            foreach (SingleMove singleMove in Moves)
+            // handle attack and transfer moves
+            foreach (GameOrderAttackTransfer attackTransferMove in AttackMoves)
             {
-                if (singleMove == move)
+                int attackingArmies = attackTransferMove.NumArmies.ArmiesOrZero;
+                if (endStandings[attackTransferMove.To].OwnerPlayerID == GameState.MyPlayerId)
                 {
-                    continue;
+                    // if transfer remove armies from start and add armies to too
+                    endStandings[attackTransferMove.From].NumArmies = new Armies(endStandings[attackTransferMove.From].NumArmies.ArmiesOrZero - attackingArmies);
+                    endStandings[attackTransferMove.To].NumArmies = new Armies(endStandings[attackTransferMove.To].NumArmies.ArmiesOrZero + attackingArmies);
+                    endStandings[attackTransferMove.To].ArmiesMarkedAsUsed = new Armies(endStandings[attackTransferMove.To].ArmiesMarkedAsUsed.ArmiesOrZero + attackingArmies);
                 }
-                singleMove.AfterStandings.Where(o => o.Key == deployMove.DeployOn).ForEach(o => o.Value.NumArmies = o.Value.NumArmies.Add(armies));
-            }
-        }
-
-        public List<SingleMove> GetDeployMoves()
-        {
-            return Moves.Where(o => o.Move is GameOrderDeploy).ToList();
-        }
-
-        public List<SingleMove> GetAttackMoves()
-        {
-            return Moves.Where(o => o.Move is GameOrderAttackTransfer).ToList();
-        }
-
-
-        private void AddAttackMove(SingleMove move)
-        {
-            Moves.Add(move);
-        }
-
-        public List<GameOrder> GetAllGameOrders()
-        {
-            return Moves.Select(o => o.Move).ToList();
-        }
-
-        public List<GameOrderDeploy> GetDeployOrders()
-        {
-            List<GameOrderDeploy> deployOrders = GetAllGameOrders().Where(o => o is GameOrderDeploy).ToList().Cast<GameOrderDeploy>().ToList();
-            return deployOrders;
-        }
-
-        public List<GameOrderAttackTransfer> GetMoveOrders()
-        {
-            List<GameOrderAttackTransfer> moveOrders = GetAllGameOrders().Where(o => o is GameOrderAttackTransfer).ToList().Cast<GameOrderAttackTransfer>().ToList();
-            return moveOrders;
-        }
-
-        public int GetStillAvailableIncome()
-        {
-            TurnState currentTurn = GameState.CurrentTurn();
-            int income = currentTurn.GetMyIncome();
-            List<GameOrderDeploy> deployOrders = GetDeployOrders();
-            deployOrders.ForEach(o => income = income - o.NumArmies);
-            return income;
-        }
-
-        public int GetAvailableArmiesOnTerritory(TerritoryIDType territoryId)
-        {
-            TurnState currentTurn = GameState.CurrentTurn();
-            TerritoryStanding territoryStanding = currentTurn.LatestTurnStanding.Territories.Where(o => o.Key == territoryId).First().Value;
-            int amountArmies = territoryStanding.NumArmies.ArmiesOrZero - 1;
-
-            List<GameOrderDeploy> deployOrders = GetDeployOrders();
-            deployOrders.Where(o => o.DeployOn == territoryId).ForEach(o => amountArmies += o.NumArmies);
-            List<GameOrderAttackTransfer> moveOrders = GetMoveOrders();
-            moveOrders.Where(o => o.From == territoryId).ForEach(o => amountArmies -= o.NumArmies.ArmiesOrZero);
-            return amountArmies;
-        }
-
-        // TODO
-        // Pumps the armies. Returns true if the armies could get pumped, false otherwise 
-        public Boolean PumpArmies(int amountArmies, TerritoryIDType territoryToPumpTo)
-        {
-            List<GameOrderAttackTransfer> pumpPath = GetPumpPath(territoryToPumpTo);
-            int availableIncome = GetStillAvailableIncome();
-            TerritoryIDType pumpFromTerritory = pumpPath[0].From;
-            int availableArmiesOnTerritory = GetAvailableArmiesOnTerritory(pumpFromTerritory);
-            int neededExtraArmies = amountArmies - availableArmiesOnTerritory;
-            if (neededExtraArmies > availableIncome)
-            {
-                return false;
-            }
-            if (neededExtraArmies > 0)
-            {
-                GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, neededExtraArmies, pumpFromTerritory, true);
-                //     AddMove(new SingleMove();
-            }// TODO merge single move into the already calculated single moves
-
-            return true;
-        }
-
-        // Returns an already calculated attack path from an owned territory to a territory in the path to which we want to pump extra deployment.
-        private List<GameOrderAttackTransfer> GetPumpPath(TerritoryIDType territoryToPumpTo)
-        {
-            List<GameOrderAttackTransfer> moveOrders = GetAllGameOrders().Where(o => o is GameOrderAttackTransfer).ToList().Cast<GameOrderAttackTransfer>().ToList();
-            // we can't pump from transfer moves
-            GameStanding gameStanding = GameState.CurrentTurn().LatestTurnStanding;
-            List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-
-            moveOrders = moveOrders.Where(o => !ownedTerritories.Contains(o.To)).ToList();
-            List<GameOrderAttackTransfer> pumpPath = null;
-            TerritoryIDType currentPumpToTerritory = territoryToPumpTo;
-            while (true)
-            {
-                if (ownedTerritories.Contains(currentPumpToTerritory))
+                else
                 {
-                    break;
+                    // if attack the result needs to get calculated
+                    TerritoryStanding from = endStandings[attackTransferMove.From];
+                    TerritoryStanding to = endStandings[attackTransferMove.To];
+                    AttackOutcome attackOutcome = new AttackOutcome(from.NumArmies.ArmiesOrZero, attackingArmies, to.NumArmies.ArmiesOrZero);
+                    from.NumArmies = new Armies(attackOutcome.RemainingArmiesAttackingTerritory);
+                    if (attackOutcome.IsTerritoryTaken)
+                    {
+                        to.OwnerPlayerID = GameState.MyPlayerId;
+                        to.NumArmies = new Armies(attackOutcome.NewArmiesDefendingTerritoryAttacker);
+                    }
+                    else
+                    {
+                        to.NumArmies = new Armies(attackOutcome.RemainingArmiesDefendingTerritoryDefender);
+                    }
                 }
-                GameOrderAttackTransfer pumpOrder = moveOrders.Find(o => o.To == currentPumpToTerritory);
-                pumpPath.Add(pumpOrder);
-                currentPumpToTerritory = pumpOrder.From;
             }
-            return pumpPath;
+            return endStandings;
         }
-
-
     }
 }
