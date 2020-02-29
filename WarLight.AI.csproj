@@ -92,8 +92,6 @@
     <Compile Include="Dalek\Debug\DebugOutput.cs" />
     <Compile Include="Dalek\Decision\MovesChooser.cs" />
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
-    <Compile Include="Dalek\Decision\SearchGameState.cs" />
-    <Compile Include="Dalek\Decision\SearchTree.cs" />
     <Compile Include="Dalek\Decision\TakeTerritoriesTask.cs" />
     <Compile Include="Dalek\Evaluation\MapEvaluator.cs" />
     <Compile Include="Dalek\Evaluation\MultiMoves.cs" />

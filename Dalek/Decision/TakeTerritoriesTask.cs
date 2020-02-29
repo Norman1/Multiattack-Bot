@@ -94,13 +94,13 @@ namespace WarLight.Shared.AI.Dalek.Decision
         private TerritoryIDType GetBestOwnTerritoryToMakeAttack(Dictionary<TerritoryIDType, TerritoryStanding> ownedNeighbors, TerritoryIDType territoryToTake,
             MultiMoves currentMoves)
         {
-            TerritoryIDType bestNeighbor = ownedNeighbors.Random().Key;
+            TerritoryIDType bestNeighbor = ownedNeighbors.First().Key;
             foreach (TerritoryIDType territoryId in ownedNeighbors.Keys)
             {
                 var attackMoves = currentMoves.AttackMoves.Where(o => o.From == bestNeighbor && o.To == territoryId).ToList();
                 if (attackMoves.Count > 0)
                 {
-                    bestNeighbor = attackMoves.Random().To;
+                    bestNeighbor = attackMoves.First().To;
                 }
 
             }

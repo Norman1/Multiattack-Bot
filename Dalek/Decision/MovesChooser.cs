@@ -25,7 +25,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
             int freeArmies = currentTurn.GetMyIncome() - multiMoves.GetCurrentDeployment();
             GameStanding gameStanding = currentTurn.LatestTurnStanding;
             List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-            TerritoryIDType randomTerritory = ownedTerritories.Random();
+            TerritoryIDType randomTerritory = ownedTerritories.First();
             while (freeArmies > 0)
             {
                 GameOrderDeploy order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
@@ -46,7 +46,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 var nonOwnedNeighbors = MapInformer.GetNonOwnedNeighborTerritories(territory.ID, multiMoves.GetTerritoryStandingsAfterAllMoves());
                 if (nonOwnedNeighbors.Count > 0)
                 {
-                    nonOwnedTerritory = nonOwnedNeighbors.Random().Key;
+                    nonOwnedTerritory = nonOwnedNeighbors.First().Key;
                     break;
                 }
             }
