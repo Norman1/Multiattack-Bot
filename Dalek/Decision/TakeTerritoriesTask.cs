@@ -11,7 +11,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
     // This class is responsible for calculating the moves in order to take given territories
     public class TakeTerritoriesTask
     {
-        //TODO as for now we ignore the deployment and just return the presentMoves object
         public MultiMoves CalculateTakeTerritoriesMoves(List<TerritoryIDType> territoriesToTake, MultiMoves presentMoves)
         {
             MultiMoves resultMoves = presentMoves.Clone();

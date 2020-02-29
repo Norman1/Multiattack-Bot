@@ -13,28 +13,49 @@ namespace WarLight.Shared.AI.Dalek.Decision
     {
         public List<GameOrder> GetMoves()
         {
-            MultiMoves multiMoves = new MultiMoves();
-            multiMoves = GetAttackMoves(multiMoves);
-            GetDeployMoves(multiMoves);
-            return multiMoves.GetAllMoves();
-        }
-
-        private void GetDeployMoves(MultiMoves multiMoves)
-        {
-            TurnState currentTurn = GameState.CurrentTurn();
-            int freeArmies = currentTurn.GetMyIncome() - multiMoves.GetCurrentDeployment();
-            GameStanding gameStanding = currentTurn.LatestTurnStanding;
-            List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-            TerritoryIDType randomTerritory = ownedTerritories.First();
-            while (freeArmies > 0)
+            List<MultiMoves> allChoices = GetAllMoves();
+            MultiMoves bestChoice = GetBestMoves(allChoices);
+            if (bestChoice == null)
             {
-                GameOrderDeploy order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
-                multiMoves.AddDeployOrder(order);
-                freeArmies--;
+                bestChoice = new MultiMoves();
             }
+            GetDeployMoves(bestChoice);
+            return bestChoice.GetAllMoves();
 
+            //   MultiMoves multiMoves = new MultiMoves();
+            //    multiMoves = GetAttackMoves(multiMoves);
+            //   GetDeployMoves(multiMoves);
+            //    return multiMoves.GetAllMoves();
         }
 
+
+        // TODO
+        // Calculates all combinations of multimoves
+        private List<MultiMoves> GetAllMoves()
+        {
+            MultiMoves initialMoves = new MultiMoves();
+            List<MultiMoves> allMoves = new List<MultiMoves>();
+            TakeBonusMultiTask task = new TakeBonusMultiTask();
+            allMoves.AddRange(task.CalculateTakeBonusMultiTask(initialMoves));
+            return allMoves;
+        }
+
+        private MultiMoves GetBestMoves(List<MultiMoves> choices)
+        {
+            MultiMoves bestMoves = choices.FirstOrDefault();
+            foreach (MultiMoves multimoves in choices)
+            {
+                MapEvaluation testEvaluation = new MapEvaluation(multimoves);
+                MapEvaluation bestMovesEvaluation = new MapEvaluation(bestMoves);
+                int testEvaluationValue = testEvaluation.GetValue();
+                int bestMovesEvaluationValue = bestMovesEvaluation.GetValue();
+                if (testEvaluationValue > bestMovesEvaluationValue)
+                {
+                    bestMoves = multimoves;
+                }
+            }
+            return bestMoves;
+        }
 
 
         private List<TerritoryIDType> GetNonOwnedBonusTerritoriesToTake(MultiMoves multiMoves)
@@ -73,6 +94,22 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 }
             }
             return multiMoves;
+
+        }
+
+        private void GetDeployMoves(MultiMoves multiMoves)
+        {
+            TurnState currentTurn = GameState.CurrentTurn();
+            int freeArmies = currentTurn.GetMyIncome() - multiMoves.GetCurrentDeployment();
+            GameStanding gameStanding = currentTurn.LatestTurnStanding;
+            List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
+            TerritoryIDType randomTerritory = ownedTerritories.First();
+            while (freeArmies > 0)
+            {
+                GameOrderDeploy order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
+                multiMoves.AddDeployOrder(order);
+                freeArmies--;
+            }
 
         }
     }

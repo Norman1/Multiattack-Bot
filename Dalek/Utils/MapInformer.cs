@@ -8,9 +8,41 @@ namespace WarLight.Shared.AI.Dalek.Utils
 {
     public class MapInformer
     {
+
+        public static List<TerritoryIDType> GetBonusTerritoriesAndNeighbors(BonusDetails bonus)
+        {
+            HashSet<TerritoryIDType> result = new HashSet<TerritoryIDType>(bonus.Territories);
+            // System.InvalidOperationException: "Die Sammlung wurde geändert. Der Enumerationsvorgang kann möglicherweise nicht ausgeführt werden."
+            foreach (TerritoryIDType testTerritory in bonus.Territories)
+            {
+                List<TerritoryIDType> neighbors = GetNeighborTerritories(testTerritory);
+                result.UnionWith(neighbors);
+            }
+            return result.ToList();
+        }
+
         public static List<TerritoryStanding> GetOwnedTerritories(List<TerritoryStanding> territoryStandings, PlayerIDType player)
         {
             return territoryStandings.Where(o => o.OwnerPlayerID == player).ToList();
+        }
+
+        public static Dictionary<BonusIDType, BonusDetails> GetOwnedBonuses(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, PlayerIDType player)
+        {
+            Dictionary<BonusIDType, BonusDetails> allBonuses = GameState.Map.Bonuses;
+            Dictionary<BonusIDType, BonusDetails> ownedBonuses = new Dictionary<BonusIDType, BonusDetails>();
+            List<TerritoryIDType> ownedTerritories = territoryStandings.Keys.Where(t => territoryStandings[t].OwnerPlayerID == player).ToList();
+
+            foreach (BonusIDType bonusId in allBonuses.Keys)
+            {
+                BonusDetails bonusDetails = allBonuses[bonusId];
+                List<TerritoryIDType> ownedBonusTerritories = bonusDetails.Territories.Where(t => ownedTerritories.Contains(t)).ToList();
+                if (ownedBonusTerritories.Count() == bonusDetails.Territories.Count())
+                {
+                    ownedBonuses.Add(bonusId, bonusDetails);
+                }
+            }
+
+            return ownedBonuses;
         }
 
         public static BonusDetails GetBonus(TerritoryIDType territoryId)
