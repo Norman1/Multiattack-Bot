@@ -12,6 +12,14 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
         public List<GameOrderDeploy> DeployMoves = new List<GameOrderDeploy>();
         public List<GameOrderAttackTransfer> AttackMoves = new List<GameOrderAttackTransfer>();
 
+        public MultiMoves Clone()
+        {
+            MultiMoves clone = new MultiMoves();
+            DeployMoves.ForEach(d => clone.DeployMoves.Add(d.Clone()));
+            AttackMoves.ForEach(a => clone.AttackMoves.Add(a.Clone()));
+            return clone;
+        }
+
         public void AddDeployOrder(GameOrderDeploy deployOrder)
         {
             GameOrderDeploy alreadyPresentDeployOrder = DeployMoves.Where(o => o.DeployOn == deployOrder.DeployOn).FirstOrDefault();
@@ -36,7 +44,49 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             outMoves.AddRange(DeployMoves);
             outMoves.AddRange(AttackMoves);
             return outMoves;
+        }
+        // https://www.warzone.com/MultiPlayer?GameID=20957787
+        // TODO: - If pumping from an owned territory choose one with the most armies.
+        public bool PumpArmies(TerritoryIDType pumpTarget, int amountArmies)
+        {
+            List<GameOrderAttackTransfer> pumpPath = GetPumpPath(pumpTarget);
+            var endStandings = GetTerritoryStandingsAfterAllMoves();
+            if (pumpPath.Count == 0)
+            {
+                // just check if attempt to pump to owned territory
+                var availableArmies = endStandings[pumpTarget].NumArmies.ArmiesOrZero - endStandings[pumpTarget].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
+                return availableArmies >= amountArmies;
+            }
+            var armiesAvailableForPump = endStandings[pumpPath[0].From].NumArmies.ArmiesOrZero - endStandings[pumpPath[0].From].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
+            int pumpArmies = Math.Max(0, Math.Min(amountArmies, armiesAvailableForPump));
+            foreach (GameOrderAttackTransfer attackOrder in pumpPath)
+            {
+                attackOrder.NumArmies = new Armies(attackOrder.NumArmies.ArmiesOrZero + pumpArmies);
+            }
+            return pumpArmies == amountArmies;
+        }
 
+        // Returns an already calculated attack path from an owned territory to a territory in the path to which we want to pump extra deployment.
+        private List<GameOrderAttackTransfer> GetPumpPath(TerritoryIDType territoryToPumpTo)
+        {
+            // we can't pump from transfer moves
+            GameStanding gameStanding = GameState.CurrentTurn().LatestTurnStanding;
+            List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
+            var attackMoves = AttackMoves.Where(o => !ownedTerritories.Contains(o.To)).ToList();
+
+            List<GameOrderAttackTransfer> pumpPath = new List<GameOrderAttackTransfer>();
+            TerritoryIDType currentPumpToTerritory = territoryToPumpTo;
+            while (true)
+            {
+                if (ownedTerritories.Contains(currentPumpToTerritory))
+                {
+                    break;
+                }
+                GameOrderAttackTransfer pumpOrder = attackMoves.Find(o => o.To == currentPumpToTerritory);
+                pumpPath.Insert(0, pumpOrder);
+                currentPumpToTerritory = pumpOrder.From;
+            }
+            return pumpPath;
         }
 
 

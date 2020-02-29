@@ -15,6 +15,19 @@ namespace WarLight.Shared.AI
         public AttackTransferEnum AttackTransfer;
         public bool ByPercent;
 
+        public GameOrderAttackTransfer Clone()
+        {
+            GameOrderAttackTransfer clone = new GameOrderAttackTransfer();
+            clone.PlayerID = PlayerID;
+            clone.From = From;
+            clone.To = To;
+            clone.NumArmies = new Armies(NumArmies.ArmiesOrZero);
+            clone.AttackTeammates = AttackTeammates;
+            clone.AttackTransfer = AttackTransfer;
+            clone.ByPercent = ByPercent;
+            return clone;
+        }
+
         public override TurnPhase? OccursInPhase
         {
             get { return TurnPhase.Attacks; }

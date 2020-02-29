@@ -12,6 +12,15 @@ namespace WarLight.Shared.AI
         public TerritoryIDType DeployOn;
         public int NumArmies; //int instead of Armies, since special units can never be deployed.
 
+        public GameOrderDeploy Clone()
+        {
+            GameOrderDeploy clone = new GameOrderDeploy();
+            clone.PlayerID = PlayerID;
+            clone.DeployOn = DeployOn;
+            clone.NumArmies = NumArmies;
+            return clone;
+        }
+
         public override TurnPhase? OccursInPhase
         {
             get { return TurnPhase.Deploys; }
@@ -25,6 +34,7 @@ namespace WarLight.Shared.AI
             o.DeployOn = deployOn;
             return o;
         }
+
 
         public override string ToString()
         {

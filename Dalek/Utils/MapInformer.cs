@@ -13,7 +13,15 @@ namespace WarLight.Shared.AI.Dalek.Utils
             return territoryStandings.Where(o => o.OwnerPlayerID == player).ToList();
         }
 
+        public static BonusDetails GetBonus(TerritoryIDType territoryId)
+        {
+            return GameState.Map.Bonuses.Where(o => o.Value.Territories.Contains(territoryId)).FirstOrDefault().Value;
+        }
 
+        public static List<TerritoryIDType> GetNonOwnedBonusTerritories(BonusDetails bonus, Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings)
+        {
+            return bonus.Territories.Where(o => territoryStandings[o].OwnerPlayerID != GameState.MyPlayerId).ToList();
+        }
 
         public static List<TerritoryIDType> GetNeighborTerritories(TerritoryIDType territory)
         {
@@ -30,6 +38,21 @@ namespace WarLight.Shared.AI.Dalek.Utils
             List<TerritoryIDType> result = new List<TerritoryIDType>();
             testTerritories.Where(o => !territoriesMarkedAsUsed.Contains(o)).ForEach(x => result.Add(x));
             return result;
+        }
+
+        public static Dictionary<TerritoryIDType, TerritoryStanding> GetOwnedNeighborTerritories(TerritoryIDType territory, Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings)
+        {
+            List<TerritoryIDType> neighborTerritories = GetNeighborTerritories(territory);
+            Dictionary<TerritoryIDType, TerritoryStanding> outDict = new Dictionary<TerritoryIDType, TerritoryStanding>();
+            foreach (TerritoryIDType neighbor in neighborTerritories)
+            {
+                if (territoryStandings[neighbor].OwnerPlayerID == GameState.MyPlayerId)
+                {
+                    outDict.Add(neighbor, territoryStandings[neighbor]);
+                }
+            }
+
+            return outDict;
         }
 
 

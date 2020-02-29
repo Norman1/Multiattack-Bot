@@ -94,10 +94,12 @@
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
     <Compile Include="Dalek\Decision\SearchGameState.cs" />
     <Compile Include="Dalek\Decision\SearchTree.cs" />
+    <Compile Include="Dalek\Decision\TakeTerritoriesTask.cs" />
     <Compile Include="Dalek\Evaluation\MapEvaluator.cs" />
     <Compile Include="Dalek\Evaluation\MultiMoves.cs" />
     <Compile Include="Dalek\GameState.cs" />
     <Compile Include="Dalek\TurnState.cs" />
+    <Compile Include="Dalek\Utils\AttackInformer.cs" />
     <Compile Include="Dalek\Utils\AttackOutcome.cs" />
     <Compile Include="Dalek\Utils\MapInformer.cs" />
     <Compile Include="Dalek\Utils\RandomUtils.cs" />
