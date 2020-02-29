@@ -14,11 +14,13 @@ namespace WarLight.Shared.AI.Dalek.Utils
             double offenceKillRate = GameState.GameSettings.OffenseKillRate;
             double defenceKillRate = GameState.GameSettings.DefenseKillRate;
             int neededAttackArmies = (int)Math.Round(defendingArmies / offenceKillRate);
+            int defenderKills = (int)Math.Round(defendingArmies * defenceKillRate);
             if (neededAttackArmies == 0)
             {
                 neededAttackArmies = 1;
             }
-            else if (neededAttackArmies == 1 && defenceKillRate >= 0.5)
+
+            else if (defenderKills >= neededAttackArmies)
             {
                 neededAttackArmies++;
             }

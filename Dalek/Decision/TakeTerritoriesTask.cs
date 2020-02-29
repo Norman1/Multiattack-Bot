@@ -12,7 +12,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
     public class TakeTerritoriesTask
     {
         //TODO as for now we ignore the deployment and just return the presentMoves object
-        public MultiMoves CalculateTaketerritoriesMoves(List<TerritoryIDType> territoriesToTake, MultiMoves presentMoves)
+        public MultiMoves CalculateTakeTerritoriesMoves(List<TerritoryIDType> territoriesToTake, MultiMoves presentMoves)
         {
             MultiMoves resultMoves = presentMoves.Clone();
             Dictionary<TerritoryIDType, TerritoryStanding> precondition = resultMoves.GetTerritoryStandingsAfterAllMoves();
@@ -38,7 +38,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     {
                         continue;
                     }
-                    // https://www.warzone.com/MultiPlayer?GameID=20959815 todo fehler irgendwo
                     TerritoryIDType ownedNeighbor = GetBestOwnTerritoryToMakeAttack(ownedNeighbors, territoryIdToTake, precondition);
                     int neededAttackArmies = AttackInformer.GetNeededBreakArmies(territoryToTake.NumArmies.ArmiesOrZero);
                     GameOrderAttackTransfer attackOrder = GameOrderAttackTransfer.Create(GameState.MyPlayerId, ownedNeighbor, territoryIdToTake, AttackTransferEnum.AttackTransfer, false, new Armies(neededAttackArmies), true);
@@ -57,16 +56,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     {
                         return null;
                     }
-
-                    // MultiMoves preconditionCopy = precondition.Clone();
-                    // bool successfull = preconditionCopy.PumpArmies(attackOrder.From, armiesToPump);
-                    //preconditionCopy.AddAttackOrder(attackOrder);
-                    // if (successfull)
-                    // {
-                    //     addedTerritories.Add(territoryIdToTake);
-                    //     foundSomething = true;
-                    //     precondition = preconditionCopy;
-                    // }
                 }
                 territoriesToTakeCopy = territoriesToTakeCopy.Except(addedTerritories).ToList();
                 SortTerritoriesToTake(territoriesToTakeCopy, precondition);

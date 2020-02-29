@@ -14,15 +14,15 @@ namespace WarLight.Shared.AI.Dalek.Decision
         public List<GameOrder> GetMoves()
         {
             MultiMoves multiMoves = new MultiMoves();
-            GetDeployMoves(multiMoves);
             multiMoves = GetAttackMoves(multiMoves);
+            GetDeployMoves(multiMoves);
             return multiMoves.GetAllMoves();
         }
 
         private void GetDeployMoves(MultiMoves multiMoves)
         {
             TurnState currentTurn = GameState.CurrentTurn();
-            int freeArmies = currentTurn.GetMyIncome();
+            int freeArmies = currentTurn.GetMyIncome() - multiMoves.GetCurrentDeployment();
             GameStanding gameStanding = currentTurn.LatestTurnStanding;
             List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
             TerritoryIDType randomTerritory = ownedTerritories.Random();
@@ -41,9 +41,9 @@ namespace WarLight.Shared.AI.Dalek.Decision
         {
             // Choose an arbitrary territory with a non owned neighbor 
             TerritoryIDType nonOwnedTerritory = new TerritoryIDType();
-            foreach (var territory in GameState.CurrentTurn().LatestTurnStanding.Territories.Where(t => t.Value.OwnerPlayerID == GameState.MyPlayerId))
+            foreach (var territory in multiMoves.GetTerritoryStandingsAfterAllMoves().Values.Where(t => t.OwnerPlayerID == GameState.MyPlayerId))
             {
-                var nonOwnedNeighbors = MapInformer.GetNonOwnedNeighborTerritories(territory.Key, GameState.CurrentTurn().LatestTurnStanding.Territories);
+                var nonOwnedNeighbors = MapInformer.GetNonOwnedNeighborTerritories(territory.ID, multiMoves.GetTerritoryStandingsAfterAllMoves());
                 if (nonOwnedNeighbors.Count > 0)
                 {
                     nonOwnedTerritory = nonOwnedNeighbors.Random().Key;
@@ -52,61 +52,28 @@ namespace WarLight.Shared.AI.Dalek.Decision
             }
             var bonus = MapInformer.GetBonus(nonOwnedTerritory);
             AILog.Log("Debug", "Attempting to take bonus: " + bonus.Name);
-            var nonOwnedBonusTerritories = MapInformer.GetNonOwnedBonusTerritories(bonus, GameState.CurrentTurn().LatestTurnStanding.Territories);
+            var nonOwnedBonusTerritories = MapInformer.GetNonOwnedBonusTerritories(bonus, multiMoves.GetTerritoryStandingsAfterAllMoves());
             return nonOwnedBonusTerritories;
         }
 
         private MultiMoves GetAttackMoves(MultiMoves multiMoves)
         {
-            var nonOwnedTerritories = GetNonOwnedBonusTerritoriesToTake(multiMoves);
-            var newMoves = new TakeTerritoriesTask().CalculateTaketerritoriesMoves(nonOwnedTerritories, multiMoves);
-            if (newMoves != null)
+            bool foundSomething = true;
+            int maxCounter = 10;
+            while (foundSomething && maxCounter > 0)
             {
-                multiMoves = newMoves;
+                foundSomething = false;
+                var nonOwnedTerritories = GetNonOwnedBonusTerritoriesToTake(multiMoves);
+                var newMoves = new TakeTerritoriesTask().CalculateTakeTerritoriesMoves(nonOwnedTerritories, multiMoves);
+                if (newMoves != null)
+                {
+                    multiMoves = newMoves;
+                    foundSomething = true;
+                    maxCounter--;
+                }
             }
             return multiMoves;
 
-            /*
-            List<TerritoryIDType> allTerritories = GameState.Map.Territories.Keys.ToList();
-            for (int i = 0; i <= 5; i++)
-            {
-                foreach (TerritoryIDType territoryId in allTerritories)
-                {
-                    var afterStandings = multiMoves.GetTerritoryStandingsAfterAllMoves();
-                    TerritoryStanding fromTerritory = afterStandings[territoryId];
-                    if (fromTerritory.OwnerPlayerID != GameState.MyPlayerId)
-                    {
-                        continue;
-                    }
-                    int armiesAvailable = fromTerritory.NumArmies.ArmiesOrZero - 1 - fromTerritory.ArmiesMarkedAsUsed.NumArmies;
-                    if (armiesAvailable < 7)
-                    {
-                        continue;
-                    }
-                    var neighbors = MapInformer.GetNonOwnedNeighborTerritories(territoryId, afterStandings).Keys.ToList();
-                    var nonUsedNeighbors = MapInformer.RemoveMarkedAsUsedTerritories(fromTerritory, neighbors);
-                    if (nonUsedNeighbors.Count == 0)
-                    {
-                        continue;
-                    }
-                    var randomNeighbor = nonUsedNeighbors.Random();
-                    Armies attackArmies = new Armies(7);
-                    GameOrderAttackTransfer order = GameOrderAttackTransfer.Create(GameState.MyPlayerId, territoryId, randomNeighbor, AttackTransferEnum.AttackTransfer, false, attackArmies, false);
-                    multiMoves.AddAttackOrder(order);
-                }
-            }
-
-            // test pump functionality
-            var beforeStandings = GameState.CurrentTurn().LatestTurnStanding.Territories;
-            var afterStandingsX = multiMoves.GetTerritoryStandingsAfterAllMoves();
-            foreach (TerritoryStanding territory in afterStandingsX.Values)
-            {
-                if (territory.OwnerPlayerID == GameState.MyPlayerId && beforeStandings[territory.ID].OwnerPlayerID != GameState.MyPlayerId)
-                {
-                    multiMoves.PumpArmies(territory.ID, 100);
-                }
-            }
-*/
         }
     }
 }

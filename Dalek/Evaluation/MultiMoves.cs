@@ -38,6 +38,13 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             AttackMoves.Add(attackOrder);
         }
 
+        public int GetCurrentDeployment()
+        {
+            int result = 0;
+            DeployMoves.ForEach(d => result += d.NumArmies);
+            return result;
+        }
+
         public List<GameOrder> GetAllMoves()
         {
             List<GameOrder> outMoves = new List<GameOrder>();
@@ -45,19 +52,38 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             outMoves.AddRange(AttackMoves);
             return outMoves;
         }
-        // https://www.warzone.com/MultiPlayer?GameID=20957787
-        // TODO: - If pumping from an owned territory choose one with the most armies.
+
+        //https://www.warzone.com/MultiPlayer?GameID=20960576 todo fehler, bot deployt 1 zu wenig im letzten zug
         public bool PumpArmies(TerritoryIDType pumpTarget, int amountArmies)
         {
             List<GameOrderAttackTransfer> pumpPath = GetPumpPath(pumpTarget);
             var endStandings = GetTerritoryStandingsAfterAllMoves();
+            int stillAvailableDeployment = GameState.CurrentTurn().GetMyIncome() - GetCurrentDeployment();
+            // check if attempt to pump to owned territory
             if (pumpPath.Count == 0)
             {
-                // just check if attempt to pump to owned territory
                 var availableArmies = endStandings[pumpTarget].NumArmies.ArmiesOrZero - endStandings[pumpTarget].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
+                int missingArmies = amountArmies - availableArmies;
+                if (missingArmies > 0 && stillAvailableDeployment >= missingArmies)
+                {
+                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, missingArmies, pumpTarget, true);
+                    AddDeployOrder(deployOrder);
+                    availableArmies += deployOrder.NumArmies;
+                }
                 return availableArmies >= amountArmies;
             }
             var armiesAvailableForPump = endStandings[pumpPath[0].From].NumArmies.ArmiesOrZero - endStandings[pumpPath[0].From].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
+            // deploy if we have to
+            if (armiesAvailableForPump < amountArmies)
+            {
+                int missingArmies = amountArmies - armiesAvailableForPump;
+                if (missingArmies > 0 && stillAvailableDeployment >= missingArmies)
+                {
+                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, missingArmies, pumpPath[0].From, true);
+                    AddDeployOrder(deployOrder);
+                    armiesAvailableForPump += deployOrder.NumArmies;
+                }
+            }
             int pumpArmies = Math.Max(0, Math.Min(amountArmies, armiesAvailableForPump));
             foreach (GameOrderAttackTransfer attackOrder in pumpPath)
             {
