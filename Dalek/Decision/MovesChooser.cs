@@ -29,15 +29,40 @@ namespace WarLight.Shared.AI.Dalek.Decision
         }
 
 
-        // TODO
-        // Calculates all combinations of multimoves
+        // TODO, needs to get thought through
         private List<MultiMoves> GetAllMoves()
         {
             MultiMoves initialMoves = new MultiMoves();
             List<MultiMoves> allMoves = new List<MultiMoves>();
-            TakeBonusMultiTask task = new TakeBonusMultiTask();
-            allMoves.AddRange(task.CalculateTakeBonusMultiTask(initialMoves));
+            allMoves.Add(initialMoves);
+            allMoves.AddRange(GetFollowupMoves(initialMoves, 0));
+            MultiMoves bestMove = GetBestMoves(allMoves);
+            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
+            bestMove = GetBestMoves(allMoves);
+            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
+            bestMove = GetBestMoves(allMoves);
+            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
             return allMoves;
+        }
+
+        // TODO endless recursion for some  reason, so max depth. Probably when multiple choices available
+        private List<MultiMoves> GetFollowupMoves(MultiMoves currentMoves, int currentDepth)
+        {
+            int maxDepth = 2;
+            TakeBonusMultiTask task = new TakeBonusMultiTask();
+            List<MultiMoves> followupMoves = task.CalculateTakeBonusMultiTask(currentMoves);
+            if (currentDepth == maxDepth)
+            {
+                return followupMoves;
+            }
+            List<MultiMoves> deeperMoves = new List<MultiMoves>();
+            foreach (MultiMoves followupMove in followupMoves)
+            {
+                deeperMoves.AddRange(GetFollowupMoves(followupMove, currentDepth + 1));
+            }
+            followupMoves.AddRange(deeperMoves);
+
+            return followupMoves;
         }
 
         private MultiMoves GetBestMoves(List<MultiMoves> choices)
