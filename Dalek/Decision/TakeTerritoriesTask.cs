@@ -20,10 +20,10 @@ namespace WarLight.Shared.AI.Dalek.Decision
             return resultMoves;
         }
 
-
         private MultiMoves GalculateMovePath(List<TerritoryIDType> territoriesToTake, MultiMoves precondition)
         {
             List<TerritoryIDType> territoriesToTakeCopy = new List<TerritoryIDType>(territoriesToTake);
+            SortTerritoriesToTake(territoriesToTakeCopy, precondition);
             Boolean foundSomething = true;
             while (foundSomething)
             {
@@ -38,7 +38,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     {
                         continue;
                     }
-                    TerritoryIDType ownedNeighbor = ownedNeighbors.Random().Key;
+                    // https://www.warzone.com/MultiPlayer?GameID=20959815 todo fehler irgendwo
+                    TerritoryIDType ownedNeighbor = GetBestOwnTerritoryToMakeAttack(ownedNeighbors, territoryIdToTake, precondition);
                     int neededAttackArmies = AttackInformer.GetNeededBreakArmies(territoryToTake.NumArmies.ArmiesOrZero);
                     GameOrderAttackTransfer attackOrder = GameOrderAttackTransfer.Create(GameState.MyPlayerId, ownedNeighbor, territoryIdToTake, AttackTransferEnum.AttackTransfer, false, new Armies(neededAttackArmies), true);
 
@@ -56,11 +57,88 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     {
                         return null;
                     }
+
+                    // MultiMoves preconditionCopy = precondition.Clone();
+                    // bool successfull = preconditionCopy.PumpArmies(attackOrder.From, armiesToPump);
+                    //preconditionCopy.AddAttackOrder(attackOrder);
+                    // if (successfull)
+                    // {
+                    //     addedTerritories.Add(territoryIdToTake);
+                    //     foundSomething = true;
+                    //     precondition = preconditionCopy;
+                    // }
                 }
                 territoriesToTakeCopy = territoriesToTakeCopy.Except(addedTerritories).ToList();
+                SortTerritoriesToTake(territoriesToTakeCopy, precondition);
             }
 
             return precondition;
+        }
+
+        private void SortTerritoriesToTake(List<TerritoryIDType> territoriesToTake, MultiMoves calculatedMoves)
+        {
+            var currentTerritoryStandings = calculatedMoves.GetTerritoryStandingsAfterAllMoves();
+            // Sort by unowned neighbors ask
+            territoriesToTake.Sort((x, y) =>
+            {
+                int xCount = MapInformer.GetNonOwnedNeighborTerritories(x, currentTerritoryStandings).Count;
+                int yCount = MapInformer.GetNonOwnedNeighborTerritories(y, currentTerritoryStandings).Count;
+                return xCount.CompareTo(yCount);
+            });
+
+            // Sort by most owned neighbors desc
+            territoriesToTake.Sort((x, y) =>
+            {
+                int xCount = MapInformer.GetOwnedNeighborTerritories(x, currentTerritoryStandings).Count;
+                int yCount = MapInformer.GetOwnedNeighborTerritories(y, currentTerritoryStandings).Count;
+                return yCount.CompareTo(xCount);
+            });
+
+
+
+
+        }
+
+
+
+
+        private TerritoryIDType GetBestOwnTerritoryToMakeAttack(Dictionary<TerritoryIDType, TerritoryStanding> ownedNeighbors, TerritoryIDType territoryToTake,
+            MultiMoves currentMoves)
+        {
+            TerritoryIDType bestNeighbor = ownedNeighbors.Random().Key;
+            foreach (TerritoryIDType territoryId in ownedNeighbors.Keys)
+            {
+                var attackMoves = currentMoves.AttackMoves.Where(o => o.From == bestNeighbor && o.To == territoryId).ToList();
+                if (attackMoves.Count > 0)
+                {
+                    bestNeighbor = attackMoves.Random().To;
+                }
+
+            }
+            // if we have all neighbors already choose the one with the max armies
+            var ownedTerritories = MapInformer.GetOwnedTerritories(GameState.CurrentTurn().LatestTurnStanding.Territories.Values.ToList(), GameState.MyPlayerId);
+            bool allNeighborsOwnedAtStart = true;
+            foreach (TerritoryIDType ownedNeighbor in ownedNeighbors.Keys)
+            {
+                if (ownedTerritories.Where(o => o.ID == ownedNeighbor).Count() == 0)
+                {
+                    allNeighborsOwnedAtStart = false;
+                    break;
+                }
+            }
+            if (allNeighborsOwnedAtStart)
+            {
+                var territoryStandings = currentMoves.GetTerritoryStandingsAfterAllMoves();
+                foreach (TerritoryIDType ownedNeighbor in ownedNeighbors.Keys)
+                {
+                    if (territoryStandings[ownedNeighbor].NumArmies.ArmiesOrZero > territoryStandings[bestNeighbor].NumArmies.ArmiesOrZero)
+                    {
+                        bestNeighbor = ownedNeighbor;
+                    }
+                }
+            }
+
+            return bestNeighbor;
         }
 
     }
