@@ -62,15 +62,12 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             // check if attempt to pump to owned territory
             if (pumpPath.Count == 0)
             {
-                var availableArmies = endStandings[pumpTarget].NumArmies.ArmiesOrZero - endStandings[pumpTarget].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
-                int missingArmies = amountArmies - availableArmies;
-                if (missingArmies > 0 && stillAvailableDeployment >= missingArmies)
+                if (amountArmies > 0 && stillAvailableDeployment >= amountArmies)
                 {
-                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, missingArmies, pumpTarget, true);
+                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, amountArmies, pumpTarget, true);
                     AddDeployOrder(deployOrder);
-                    availableArmies += deployOrder.NumArmies;
                 }
-                return availableArmies >= amountArmies;
+                return stillAvailableDeployment >= amountArmies;
             }
             var armiesAvailableForPump = endStandings[pumpPath[0].From].NumArmies.ArmiesOrZero - endStandings[pumpPath[0].From].ArmiesMarkedAsUsed.ArmiesOrZero - 1;
             // deploy if we have to
