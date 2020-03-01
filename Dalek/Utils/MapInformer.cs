@@ -9,6 +9,51 @@ namespace WarLight.Shared.AI.Dalek.Utils
     public class MapInformer
     {
 
+
+        public static Dictionary<TerritoryIDType, int> GetDistancesFromTerritories
+            (List<TerritoryIDType> distanceTerritories)
+        {
+            // init 
+            var result = new Dictionary<TerritoryIDType, int>();
+            foreach (var territoryId in GameState.CurrentTurn().LatestTurnStanding.Territories.Keys)
+            {
+                bool present = distanceTerritories.Contains(territoryId);
+                if (present)
+                {
+                    result.Add(territoryId, 0);
+                }
+                else
+                {
+                    result.Add(territoryId, -1);
+                }
+            }
+
+            // calculate
+            bool foundSomething = true;
+            while (foundSomething)
+            {
+                foundSomething = false;
+                foreach (TerritoryIDType territoryId in GameState.CurrentTurn().LatestTurnStanding.Territories.Keys)
+                {
+                    if (result[territoryId] != -1)
+                    {
+                        continue;
+                    }
+                    var neighbors = GetNeighborTerritories(territoryId);
+                    var calculatedNeighbors = neighbors.Where(n => result[n] != -1).ToList();
+                    if (calculatedNeighbors.Count > 0)
+                    {
+                        int minNeighborValue = calculatedNeighbors.Min(c => result[c]);
+                        result[territoryId] = minNeighborValue + 1; ;
+                        foundSomething = true;
+                    }
+
+                }
+            }
+
+            return result;
+        }
+
         public static List<TerritoryIDType> GetBonusTerritoriesAndNeighbors(BonusDetails bonus)
         {
             HashSet<TerritoryIDType> result = new HashSet<TerritoryIDType>(bonus.Territories);
@@ -30,6 +75,11 @@ namespace WarLight.Shared.AI.Dalek.Utils
         public static List<TerritoryStanding> GetOwnedTerritories(List<TerritoryStanding> territoryStandings, PlayerIDType player)
         {
             return territoryStandings.Where(o => o.OwnerPlayerID == player).ToList();
+        }
+
+        public static List<TerritoryStanding> GetNonOwnedTerritories(List<TerritoryStanding> territoryStandings, PlayerIDType player)
+        {
+            return territoryStandings.Where(o => o.OwnerPlayerID != player).ToList();
         }
 
         public static Dictionary<BonusIDType, BonusDetails> GetOwnedBonuses(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, PlayerIDType player)

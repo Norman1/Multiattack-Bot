@@ -20,7 +20,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 bestChoice = new MultiMoves();
             }
             bestChoice = new NoPlanAddAddRemainingTask().CalculateNoPlanMoves(bestChoice);
-            //   GetDeployMoves(bestChoice);
+            bestChoice = new MoveArmiesToBorderTask().CalculateMoveArmiesToBorderMoves(bestChoice);
             return bestChoice.GetAllMoves();
         }
 

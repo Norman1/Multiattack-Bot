@@ -40,7 +40,15 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
         public void AddAttackOrder(GameOrderAttackTransfer attackOrder)
         {
             standingCache = null;
-            AttackMoves.Add(attackOrder);
+            var alreadyPresentAttackMove = AttackMoves.Where(a => a.From == attackOrder.From && a.To == attackOrder.To).FirstOrDefault();
+            if (alreadyPresentAttackMove == null)
+            {
+                AttackMoves.Add(attackOrder);
+            }
+            else
+            {
+                alreadyPresentAttackMove.NumArmies = new Armies(alreadyPresentAttackMove.NumArmies.ArmiesOrZero + attackOrder.NumArmies.ArmiesOrZero);
+            }
         }
 
         public int GetCurrentDeployment()

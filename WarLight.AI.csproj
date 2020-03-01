@@ -102,6 +102,7 @@
     <Compile Include="Dalek\Utils\AttackInformer.cs" />
     <Compile Include="Dalek\Utils\AttackOutcome.cs" />
     <Compile Include="Dalek\Utils\MapInformer.cs" />
+    <Compile Include="Dalek\Utils\MoveArmiesToBorderTask.cs" />
     <Compile Include="Dalek\Utils\RandomUtils.cs" />
     <Compile Include="Prod\BonusPath.cs" />
     <Compile Include="Prod\BotMain.cs" />
