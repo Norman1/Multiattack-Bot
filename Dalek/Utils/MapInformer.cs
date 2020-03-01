@@ -21,6 +21,12 @@ namespace WarLight.Shared.AI.Dalek.Utils
             return result.ToList();
         }
 
+        public static List<TerritoryStanding> GetOwnedBorderTerritories(Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings, PlayerIDType player)
+        {
+            var ownedTerritories = territoryStandings.Values.Where(o => o.OwnerPlayerID == player);
+            return ownedTerritories.Where(o => GetNonOwnedNeighborTerritories(o.ID, territoryStandings).Count() > 0).ToList();
+        }
+
         public static List<TerritoryStanding> GetOwnedTerritories(List<TerritoryStanding> territoryStandings, PlayerIDType player)
         {
             return territoryStandings.Where(o => o.OwnerPlayerID == player).ToList();

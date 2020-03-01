@@ -91,6 +91,7 @@
     <Compile Include="Dalek\BotMain.cs" />
     <Compile Include="Dalek\Debug\DebugOutput.cs" />
     <Compile Include="Dalek\Decision\MovesChooser.cs" />
+    <Compile Include="Dalek\Decision\NoPlanAddAddRemainingTask.cs" />
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
     <Compile Include="Dalek\Decision\TakeBonusMultiTask.cs" />
     <Compile Include="Dalek\Decision\TakeTerritoriesTask.cs" />

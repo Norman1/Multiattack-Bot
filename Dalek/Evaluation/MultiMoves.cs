@@ -13,6 +13,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
         public List<GameOrderAttackTransfer> AttackMoves = new List<GameOrderAttackTransfer>();
         private Dictionary<TerritoryIDType, TerritoryStanding> standingCache = null;
 
+
         public MultiMoves Clone()
         {
             MultiMoves clone = new MultiMoves();

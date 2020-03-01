@@ -19,7 +19,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
             {
                 bestChoice = new MultiMoves();
             }
-            GetDeployMoves(bestChoice);
+            bestChoice = new NoPlanAddAddRemainingTask().CalculateNoPlanMoves(bestChoice);
+            //   GetDeployMoves(bestChoice);
             return bestChoice.GetAllMoves();
         }
 
@@ -41,7 +42,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
         // TODO endless recursion for some  reason, so max depth. Probably when multiple choices available
         private List<MultiMoves> GetFollowupMoves(MultiMoves currentMoves, int currentDepth)
         {
-            int maxDepth = 2;
+            int maxDepth = 1;
             TakeBonusMultiTask task = new TakeBonusMultiTask();
             List<MultiMoves> followupMoves = task.CalculateTakeBonusMultiTask(currentMoves);
             if (currentDepth == maxDepth)
@@ -112,22 +113,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 }
             }
             return multiMoves;
-
-        }
-
-        private void GetDeployMoves(MultiMoves multiMoves)
-        {
-            TurnState currentTurn = GameState.CurrentTurn();
-            int freeArmies = currentTurn.GetMyIncome() - multiMoves.GetCurrentDeployment();
-            GameStanding gameStanding = currentTurn.LatestTurnStanding;
-            List<TerritoryIDType> ownedTerritories = gameStanding.Territories.Values.Where(o => o.OwnerPlayerID == GameState.MyPlayerId).Select(o => o.ID).ToList();
-            TerritoryIDType randomTerritory = ownedTerritories.First();
-            while (freeArmies > 0)
-            {
-                GameOrderDeploy order = GameOrderDeploy.Create(GameState.MyPlayerId, 1, randomTerritory, true);
-                multiMoves.AddDeployOrder(order);
-                freeArmies--;
-            }
 
         }
     }
