@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using WarLight.Shared.AI.Dalek.Debug;
 using WarLight.Shared.AI.Dalek.Decision;
 
 namespace WarLight.Shared.AI.Dalek.Bot
@@ -43,8 +44,11 @@ namespace WarLight.Shared.AI.Dalek.Bot
 
         public List<GameOrder> GetOrders()
         {
+            DebugOutput.LogBeginMove();
             MovesChooser movesChooser = new MovesChooser();
-            return movesChooser.GetMoves();
+            List<GameOrder> calculatedMoves = movesChooser.GetMoves();
+            DebugOutput.LogEndMove();
+            return calculatedMoves;
         }
 
         public List<TerritoryIDType> GetPicks()

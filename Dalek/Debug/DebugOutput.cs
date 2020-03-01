@@ -9,13 +9,18 @@ namespace WarLight.Shared.AI.Dalek.Debug
 {
     public class DebugOutput
     {
-        public static void LogMultiMoves(MultiMoves multiMoves)
+        private static System.Diagnostics.Stopwatch watch = null;
+        static public void LogBeginMove()
         {
-            //   foreach (SingleMove singleMove in multiMoves.Moves)
-            //    {
-            //        AILog.Log("Debug", "After standings count= " + singleMove.AfterStandings.Count());
-            //   }
-
+            AILog.Log("Debug", "----- Turn: " + GameState.CurrentTurn().NumberOfTurns + " -----");
+            watch = System.Diagnostics.Stopwatch.StartNew();
         }
+
+        static public void LogEndMove()
+        {
+            watch.Stop();
+            AILog.Log("Debug", "Round execution time: " + watch.ElapsedMilliseconds);
+        }
+
     }
 }

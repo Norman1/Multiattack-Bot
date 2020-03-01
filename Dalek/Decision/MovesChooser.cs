@@ -21,15 +21,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
             }
             GetDeployMoves(bestChoice);
             return bestChoice.GetAllMoves();
-
-            //   MultiMoves multiMoves = new MultiMoves();
-            //    multiMoves = GetAttackMoves(multiMoves);
-            //   GetDeployMoves(multiMoves);
-            //    return multiMoves.GetAllMoves();
         }
 
-
-        // TODO, needs to get thought through
         private List<MultiMoves> GetAllMoves()
         {
             MultiMoves initialMoves = new MultiMoves();

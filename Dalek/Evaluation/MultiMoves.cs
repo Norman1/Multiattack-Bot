@@ -11,17 +11,20 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
     {
         public List<GameOrderDeploy> DeployMoves = new List<GameOrderDeploy>();
         public List<GameOrderAttackTransfer> AttackMoves = new List<GameOrderAttackTransfer>();
+        private Dictionary<TerritoryIDType, TerritoryStanding> standingCache = null;
 
         public MultiMoves Clone()
         {
             MultiMoves clone = new MultiMoves();
             DeployMoves.ForEach(d => clone.DeployMoves.Add(d.Clone()));
             AttackMoves.ForEach(a => clone.AttackMoves.Add(a.Clone()));
+            clone.standingCache = null;
             return clone;
         }
 
         public void AddDeployOrder(GameOrderDeploy deployOrder)
         {
+            standingCache = null;
             GameOrderDeploy alreadyPresentDeployOrder = DeployMoves.Where(o => o.DeployOn == deployOrder.DeployOn).FirstOrDefault();
             if (alreadyPresentDeployOrder == null)
             {
@@ -35,6 +38,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
 
         public void AddAttackOrder(GameOrderAttackTransfer attackOrder)
         {
+            standingCache = null;
             AttackMoves.Add(attackOrder);
         }
 
@@ -53,9 +57,9 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             return outMoves;
         }
 
-        //https://www.warzone.com/MultiPlayer?GameID=20960576 todo fehler, bot deployt 1 zu wenig im letzten zug
         public bool PumpArmies(TerritoryIDType pumpTarget, int amountArmies)
         {
+            standingCache = null;
             List<GameOrderAttackTransfer> pumpPath = GetPumpPath(pumpTarget);
             var endStandings = GetTerritoryStandingsAfterAllMoves();
             int stillAvailableDeployment = GameState.CurrentTurn().GetMyIncome() - GetCurrentDeployment();
@@ -115,6 +119,10 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
 
         public Dictionary<TerritoryIDType, TerritoryStanding> GetTerritoryStandingsAfterAllMoves()
         {
+            if (standingCache != null)
+            {
+                return standingCache;
+            }
             Dictionary<TerritoryIDType, TerritoryStanding> beginStandings = GameState.CurrentTurn().LatestTurnStanding.Territories;
             Dictionary<TerritoryIDType, TerritoryStanding> endStandings = new Dictionary<TerritoryIDType, TerritoryStanding>();
             // init
@@ -156,6 +164,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
                     }
                 }
             }
+            standingCache = endStandings;
             return endStandings;
         }
     }
