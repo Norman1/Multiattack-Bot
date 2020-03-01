@@ -43,8 +43,13 @@ namespace WarLight.Shared.AI.Dalek.Decision
         private List<MultiMoves> GetFollowupMoves(MultiMoves currentMoves, int currentDepth)
         {
             int maxDepth = 1;
-            TakeBonusMultiTask task = new TakeBonusMultiTask();
-            List<MultiMoves> followupMoves = task.CalculateTakeBonusMultiTask(currentMoves);
+            BreakBonusMultiTask breakBonusMultiTask = new BreakBonusMultiTask();
+            List<MultiMoves> breakFollowupupMoves = breakBonusMultiTask.CalculateBreakBonusMultiTask(currentMoves);
+            TakeBonusMultiTask takeBonusMultiTask = new TakeBonusMultiTask();
+            List<MultiMoves> takeBonusFollowupMoves = takeBonusMultiTask.CalculateTakeBonusMultiTask(currentMoves);
+            List<MultiMoves> followupMoves = new List<MultiMoves>();
+            followupMoves.AddRange(breakFollowupupMoves);
+            followupMoves.AddRange(takeBonusFollowupMoves);
             if (currentDepth == maxDepth)
             {
                 return followupMoves;

@@ -90,6 +90,7 @@
     <Compile Include="Cowzow\Move\BotOrderDeploy.cs" />
     <Compile Include="Dalek\BotMain.cs" />
     <Compile Include="Dalek\Debug\DebugOutput.cs" />
+    <Compile Include="Dalek\Decision\BreakBonusesMultiTask.cs" />
     <Compile Include="Dalek\Decision\MovesChooser.cs" />
     <Compile Include="Dalek\Decision\NoPlanAddAddRemainingTask.cs" />
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
