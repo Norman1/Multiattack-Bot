@@ -15,11 +15,11 @@ namespace WarLight.Shared.AI.Dalek.Decision
         {
             MultiMoves resultMoves = presentMoves.Clone();
             Dictionary<TerritoryIDType, TerritoryStanding> precondition = resultMoves.GetTerritoryStandingsAfterAllMoves();
-            resultMoves = GalculateMovePath(territoriesToTake, resultMoves);
+            resultMoves = CalculateMovePath(territoriesToTake, resultMoves);
             return resultMoves;
         }
 
-        private MultiMoves GalculateMovePath(List<TerritoryIDType> territoriesToTake, MultiMoves precondition)
+        private MultiMoves CalculateMovePath(List<TerritoryIDType> territoriesToTake, MultiMoves precondition)
         {
             List<TerritoryIDType> territoriesToTakeCopy = new List<TerritoryIDType>(territoriesToTake);
             SortTerritoriesToTake(territoriesToTakeCopy, precondition);
@@ -63,25 +63,67 @@ namespace WarLight.Shared.AI.Dalek.Decision
             return precondition;
         }
 
+        private int GetNonOwnedNeighborTerritoryCount
+            (TerritoryIDType territory, List<TerritoryIDType> territoryRange, Dictionary<TerritoryIDType, TerritoryStanding> territoryStandings)
+        {
+            var nonOwnedNeighborTerritories = MapInformer.GetNonOwnedNeighborTerritories(territory, territoryStandings).Keys.ToList();
+            nonOwnedNeighborTerritories.RemoveWhere(t => !territoryRange.Contains(t));
+            return nonOwnedNeighborTerritories.Count();
+        }
+
         private void SortTerritoriesToTake(List<TerritoryIDType> territoriesToTake, MultiMoves calculatedMoves)
         {
+            // Sort by unowned neighbors in territories to take
             var currentTerritoryStandings = calculatedMoves.GetTerritoryStandingsAfterAllMoves();
-            // Sort by unowned neighbors ask
             territoriesToTake.Sort((x, y) =>
             {
-                int xCount = MapInformer.GetNonOwnedNeighborTerritories(x, currentTerritoryStandings).Count;
-                int yCount = MapInformer.GetNonOwnedNeighborTerritories(y, currentTerritoryStandings).Count;
+                int xCount = GetNonOwnedNeighborTerritoryCount(x, territoriesToTake, currentTerritoryStandings);
+                int yCount = GetNonOwnedNeighborTerritoryCount(y, territoriesToTake, currentTerritoryStandings);
                 return xCount.CompareTo(yCount);
             });
 
-            // Sort by most owned neighbors desc
+            // Prefer territories when we are already attacking a neighbor
+            var territoriesWithNeighborAttacks = new List<TerritoryIDType>();
+            foreach (TerritoryIDType territoryId in territoriesToTake)
+            {
+                var neighbors = MapInformer.GetNeighborTerritories(territoryId);
+                if (calculatedMoves.AttackMoves.Where(a => neighbors.Contains(a.To)).Count() > 0)
+                {
+                    territoriesWithNeighborAttacks.Add(territoryId);
+                }
+            }
+            var territoriesWithNonNeighborAttacks = territoriesToTake.Where(t => !territoriesWithNeighborAttacks.Contains(t)).ToList();
+            territoriesToTake.Clear();
+            territoriesToTake.AddRange(territoriesWithNeighborAttacks);
+            territoriesToTake.AddRange(territoriesWithNonNeighborAttacks);
+
+            // Especially prefer territories when our last attack order attacks a neighbor
+            if (calculatedMoves.AttackMoves.Count() > 0)
+            {
+                TerritoryIDType lastAttackTerritory = calculatedMoves.AttackMoves.Last().To;
+                var territoriesWithLastNeighborAttacks = new List<TerritoryIDType>();
+                foreach (TerritoryIDType territoryId in territoriesToTake)
+                {
+                    var neighbors = MapInformer.GetNeighborTerritories(territoryId);
+                    if (neighbors.Contains(lastAttackTerritory))
+                    {
+                        territoriesWithLastNeighborAttacks.Add(territoryId);
+                    }
+                }
+                var territoriesWithNonLastNeighborAttacks = territoriesToTake.Where(t => !territoriesWithLastNeighborAttacks.Contains(t)).ToList();
+                territoriesToTake.Clear();
+                territoriesToTake.AddRange(territoriesWithLastNeighborAttacks);
+                territoriesToTake.AddRange(territoriesWithNonLastNeighborAttacks);
+            }
+
+
+            // Prefer territories when we already own a neighbor (else we can't move with current code)
             territoriesToTake.Sort((x, y) =>
             {
-                int xCount = MapInformer.GetOwnedNeighborTerritories(x, currentTerritoryStandings).Count;
-                int yCount = MapInformer.GetOwnedNeighborTerritories(y, currentTerritoryStandings).Count;
+                int xCount = Math.Max(1, MapInformer.GetOwnedNeighborTerritories(x, currentTerritoryStandings).Count);
+                int yCount = Math.Max(1, MapInformer.GetOwnedNeighborTerritories(y, currentTerritoryStandings).Count);
                 return yCount.CompareTo(xCount);
             });
-
 
 
 
