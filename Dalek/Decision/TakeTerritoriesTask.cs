@@ -11,6 +11,13 @@ namespace WarLight.Shared.AI.Dalek.Decision
     // This class is responsible for calculating the moves in order to take given territories
     public class TakeTerritoriesTask
     {
+        private String Reason;
+
+        public TakeTerritoriesTask(String reason)
+        {
+            Reason = reason;
+        }
+
         public MultiMoves CalculateTakeTerritoriesMoves(List<TerritoryIDType> territoriesToTake, MultiMoves presentMoves)
         {
             MultiMoves resultMoves = presentMoves.Clone();
@@ -39,7 +46,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     }
                     TerritoryIDType ownedNeighbor = GetBestOwnTerritoryToMakeAttack(ownedNeighbors, territoryIdToTake, precondition);
                     int neededAttackArmies = AttackInformer.GetNeededBreakArmies(territoryToTake.NumArmies.ArmiesOrZero);
-                    GameOrderAttackTransfer attackOrder = GameOrderAttackTransfer.Create(GameState.MyPlayerId, ownedNeighbor, territoryIdToTake, AttackTransferEnum.AttackTransfer, false, new Armies(neededAttackArmies), true);
+                    GameOrderAttackTransfer attackOrder = GameOrderAttackTransfer.Create
+                        (GameState.MyPlayerId, ownedNeighbor, territoryIdToTake, AttackTransferEnum.AttackTransfer, new Armies(neededAttackArmies), Reason);
 
                     // pump to the start territory of the attack order
                     // the territory can already have some armies like leftovers from a previous attack
@@ -47,7 +55,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     int leftoverArmies = standing.NumArmies.ArmiesOrZero - standing.ArmiesMarkedAsUsed.ArmiesOrZero - 1;
                     int armiesToPump = Math.Max(0, attackOrder.NumArmies.ArmiesOrZero - leftoverArmies);
 
-                    bool successfull = precondition.PumpArmies(attackOrder.From, armiesToPump);
+                    bool successfull = precondition.PumpArmies(attackOrder.From, armiesToPump, Reason);
                     precondition.AddAttackOrder(attackOrder);
                     foundSomething = true;
                     addedTerritories.Add(territoryIdToTake);

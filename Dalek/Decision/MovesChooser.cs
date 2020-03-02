@@ -11,7 +11,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
 {
     public class MovesChooser
     {
-        public List<GameOrder> GetMoves()
+        public MultiMoves GetMoves()
         {
             List<MultiMoves> allChoices = GetAllMoves();
             MultiMoves bestChoice = GetBestMoves(allChoices);
@@ -21,7 +21,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
             }
             bestChoice = new NoPlanAddAddRemainingTask().CalculateNoPlanMoves(bestChoice);
             bestChoice = new MoveArmiesToBorderTask().CalculateMoveArmiesToBorderMoves(bestChoice);
-            return bestChoice.GetAllMoves();
+            return bestChoice;
         }
 
         private List<MultiMoves> GetAllMoves()
@@ -99,26 +99,6 @@ namespace WarLight.Shared.AI.Dalek.Decision
             AILog.Log("Debug", "Attempting to take bonus: " + bonus.Name);
             var nonOwnedBonusTerritories = MapInformer.GetNonOwnedBonusTerritories(bonus, multiMoves.GetTerritoryStandingsAfterAllMoves());
             return nonOwnedBonusTerritories;
-        }
-
-        private MultiMoves GetAttackMoves(MultiMoves multiMoves)
-        {
-            bool foundSomething = true;
-            int maxCounter = 10;
-            while (foundSomething && maxCounter > 0)
-            {
-                foundSomething = false;
-                var nonOwnedTerritories = GetNonOwnedBonusTerritoriesToTake(multiMoves);
-                var newMoves = new TakeTerritoriesTask().CalculateTakeTerritoriesMoves(nonOwnedTerritories, multiMoves);
-                if (newMoves != null)
-                {
-                    multiMoves = newMoves;
-                    foundSomething = true;
-                    maxCounter--;
-                }
-            }
-            return multiMoves;
-
         }
     }
 }

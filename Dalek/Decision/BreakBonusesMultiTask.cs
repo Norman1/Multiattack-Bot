@@ -11,6 +11,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
     // Calcualtes for each single opponent bonus the necessary steps in order to break it.
     class BreakBonusMultiTask
     {
+        private static readonly String REASON = "BreakBonusMultiTask";
 
         public List<MultiMoves> CalculateBreakBonusMultiTask(MultiMoves presentMoves)
         {
@@ -45,7 +46,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 currentTerritoryInAttackPath = bestNeighborToAttack;
                 currentDistance--;
             }
-            TakeTerritoriesTask takeTerritoriesTask = new TakeTerritoriesTask();
+            TakeTerritoriesTask takeTerritoriesTask = new TakeTerritoriesTask(REASON);
             MultiMoves resultMoves = takeTerritoriesTask.CalculateTakeTerritoriesMoves(territoriesToTake, presentMoves);
             return resultMoves;
         }

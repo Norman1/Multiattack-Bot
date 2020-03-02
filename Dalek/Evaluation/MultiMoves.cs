@@ -66,7 +66,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             return outMoves;
         }
 
-        public bool PumpArmies(TerritoryIDType pumpTarget, int amountArmies)
+        public bool PumpArmies(TerritoryIDType pumpTarget, int amountArmies, String reason)
         {
             standingCache = null;
             List<GameOrderAttackTransfer> pumpPath = GetPumpPath(pumpTarget);
@@ -77,7 +77,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             {
                 if (amountArmies > 0 && stillAvailableDeployment >= amountArmies)
                 {
-                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, amountArmies, pumpTarget, true);
+                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, amountArmies, pumpTarget, reason);
                     AddDeployOrder(deployOrder);
                 }
                 return stillAvailableDeployment >= amountArmies;
@@ -89,7 +89,7 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
                 int missingArmies = amountArmies - armiesAvailableForPump;
                 if (missingArmies > 0 && stillAvailableDeployment >= missingArmies)
                 {
-                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, missingArmies, pumpPath[0].From, true);
+                    GameOrderDeploy deployOrder = GameOrderDeploy.Create(GameState.MyPlayerId, missingArmies, pumpPath[0].From, reason);
                     AddDeployOrder(deployOrder);
                     armiesAvailableForPump += deployOrder.NumArmies;
                 }

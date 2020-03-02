@@ -14,6 +14,7 @@ namespace WarLight.Shared.AI
         public bool AttackTeammates;
         public AttackTransferEnum AttackTransfer;
         public bool ByPercent;
+        public String Reason;
 
         public GameOrderAttackTransfer Clone()
         {
@@ -25,12 +26,28 @@ namespace WarLight.Shared.AI
             clone.AttackTeammates = AttackTeammates;
             clone.AttackTransfer = AttackTransfer;
             clone.ByPercent = ByPercent;
+            clone.Reason = Reason;
             return clone;
         }
 
         public override TurnPhase? OccursInPhase
         {
             get { return TurnPhase.Attacks; }
+        }
+
+
+        public static GameOrderAttackTransfer Create(PlayerIDType playerID, TerritoryIDType from, TerritoryIDType to, AttackTransferEnum attackTransfer, Armies armies, String reason)
+        {
+            var r = new GameOrderAttackTransfer();
+            r.PlayerID = playerID;
+            r.From = from;
+            r.To = to;
+            r.AttackTransfer = attackTransfer;
+            r.ByPercent = false;
+            r.NumArmies = armies;
+            r.AttackTeammates = true;
+            r.Reason = reason;
+            return r;
         }
 
         public static GameOrderAttackTransfer Create(PlayerIDType playerID, TerritoryIDType from, TerritoryIDType to, AttackTransferEnum attackTransfer, bool byPercent, Armies armies, bool attackTeammates)

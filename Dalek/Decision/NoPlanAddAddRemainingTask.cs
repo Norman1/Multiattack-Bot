@@ -11,6 +11,9 @@ namespace WarLight.Shared.AI.Dalek.Decision
     // This class is supposed to get called after all calculated moves. If still armies are available it adds them
     class NoPlanAddAddRemainingTask
     {
+
+        private static readonly String REASON = "NoPlanAddAddRemainingTask";
+
         public MultiMoves CalculateNoPlanMoves(MultiMoves presentMoves)
         {
             MultiMoves resultMoves = presentMoves.Clone();
@@ -28,6 +31,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
             return resultMoves;
         }
 
+
+
         private void AddBorderTerritoryDeployment(MultiMoves movesSoFar, int availableDeployment)
         {
             TerritoryStanding territoryToDeployTo = MapInformer.GetOwnedBorderTerritories(movesSoFar.GetTerritoryStandingsAfterAllMoves(), GameState.MyPlayerId).FirstOrDefault();
@@ -35,8 +40,10 @@ namespace WarLight.Shared.AI.Dalek.Decision
             {
                 territoryToDeployTo = MapInformer.GetOwnedTerritories(GameState.CurrentTurn().LatestTurnStanding.Territories.Values.ToList(), GameState.MyPlayerId).First();
             }
-            movesSoFar.AddDeployOrder(GameOrderDeploy.Create(GameState.MyPlayerId, availableDeployment, territoryToDeployTo.ID, true));
+            movesSoFar.AddDeployOrder(GameOrderDeploy.Create(GameState.MyPlayerId, availableDeployment, territoryToDeployTo.ID, REASON));
         }
+
+
 
         private void PumpBiggestAttack(MultiMoves movesSoFar, GameOrderAttackTransfer biggestAttack, int availableDeployment)
         {
@@ -44,7 +51,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
             {
                 return;
             }
-            movesSoFar.AddDeployOrder(GameOrderDeploy.Create(GameState.MyPlayerId, availableDeployment, biggestAttack.From, true));
+            movesSoFar.AddDeployOrder(GameOrderDeploy.Create(GameState.MyPlayerId, availableDeployment, biggestAttack.From, REASON));
             var endAttack = biggestAttack;
             bool foundStep = true;
             while (foundStep)
@@ -59,7 +66,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                 }
 
             }
-            movesSoFar.PumpArmies(endAttack.To, availableDeployment);
+            movesSoFar.PumpArmies(endAttack.To, availableDeployment, REASON);
         }
 
 

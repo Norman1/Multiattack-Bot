@@ -9,8 +9,12 @@ namespace WarLight.Shared.AI.Dalek.Utils
 {
     class MoveArmiesToBorderTask
     {
+        private static readonly String REASON = "TakeTerritoriesTask";
+
         public MultiMoves CalculateMoveArmiesToBorderMoves(MultiMoves presentMoves)
         {
+
+
             MultiMoves result = presentMoves.Clone();
             var nonOwnedTerritories = MapInformer.GetNonOwnedTerritories(result.GetTerritoryStandingsAfterAllMoves().Values.ToList(), GameState.MyPlayerId);
             var keys = new List<TerritoryIDType>();
@@ -34,7 +38,7 @@ namespace WarLight.Shared.AI.Dalek.Utils
                 }
                 GameOrderAttackTransfer attackMove =
                     GameOrderAttackTransfer.Create
-                    (GameState.MyPlayerId, territoryId, lowestDistanceNeighbor, AttackTransferEnum.AttackTransfer, false, new Armies(armiesAvailable), true);
+                    (GameState.MyPlayerId, territoryId, lowestDistanceNeighbor, AttackTransferEnum.AttackTransfer, new Armies(armiesAvailable), REASON);
                 result.AddAttackOrder(attackMove);
             }
             return result;

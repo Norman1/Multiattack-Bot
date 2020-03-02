@@ -11,6 +11,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
 
     class TakeBonusMultiTask
     {
+        private static readonly String REASON = "TakeBonusMultiTask";
+
         // Calculates for each bonus on the map the steps necessary to take it
         // Currently only neighboring bonuses are seen as applicable
         public List<MultiMoves> CalculateTakeBonusMultiTask(MultiMoves presentMoves)
@@ -20,7 +22,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
             foreach (var bonus in applicableBonuses.Values)
             {
                 var territoriesToTake = GetMissingBonusTerritories(bonus, presentMoves);
-                TakeTerritoriesTask takeTerritoriesTask = new TakeTerritoriesTask();
+                TakeTerritoriesTask takeTerritoriesTask = new TakeTerritoriesTask(REASON);
                 MultiMoves calculatedMoves = takeTerritoriesTask.CalculateTakeTerritoriesMoves(territoriesToTake, presentMoves);
                 if (calculatedMoves != null)
                 {
