@@ -41,7 +41,8 @@ namespace WarLight.Shared.AI.Dalek.Decision
             while (currentDistance != 0)
             {
                 var neighbors = MapInformer.GetNeighborTerritories(currentTerritoryInAttackPath);
-                var bestNeighborToAttack = neighbors.Where(n => distances[n] == currentDistance - 1).First();
+                var possibleAttackNeighbors = neighbors.Where(n => distances[n] == currentDistance - 1).ToList();
+                var bestNeighborToAttack = GetBestNeighborToAttack(possibleAttackNeighbors);
                 territoriesToTake.Add(bestNeighborToAttack);
                 currentTerritoryInAttackPath = bestNeighborToAttack;
                 currentDistance--;
@@ -49,6 +50,39 @@ namespace WarLight.Shared.AI.Dalek.Decision
             TakeTerritoriesTask takeTerritoriesTask = new TakeTerritoriesTask(REASON);
             MultiMoves resultMoves = takeTerritoriesTask.CalculateTakeTerritoriesMoves(territoriesToTake, presentMoves);
             return resultMoves;
+        }
+
+        private TerritoryIDType GetBestNeighborToAttack(List<TerritoryIDType> possibleTargets)
+        {
+            var bestTarget = GameState.CurrentTurn().LatestTurnStanding.Territories[possibleTargets.First()];
+            foreach (TerritoryIDType territoryId in possibleTargets)
+            {
+                var testTarget = GameState.CurrentTurn().LatestTurnStanding.Territories[territoryId];
+                if (bestTarget.IsNeutral && testTarget.OwnerPlayerID == GameState.OpponentPlayerId)
+                {
+                    testTarget = bestTarget;
+                }
+                else if (bestTarget.IsNeutral && testTarget.IsNeutral && testTarget.NumArmies.ArmiesOrZero < bestTarget.NumArmies.ArmiesOrZero)
+                {
+                    testTarget = bestTarget;
+                }
+                else if (bestTarget.OwnerPlayerID == GameState.OpponentPlayerId && testTarget.OwnerPlayerID == GameState.OpponentPlayerId)
+                {
+                    var testTargetBonus = MapInformer.GetBonus(testTarget.ID);
+                    var bestTargetBonus = MapInformer.GetBonus(bestTarget.ID);
+                    var opponentBonuses = MapInformer.GetOwnedBonuses(GameState.CurrentTurn().LatestTurnStanding.Territories, GameState.OpponentPlayerId);
+                    if (opponentBonuses.Keys.Contains(testTargetBonus.ID) && !opponentBonuses.Keys.Contains(bestTargetBonus.ID))
+                    {
+                        testTarget = bestTarget;
+                    }
+                    else if (opponentBonuses.Keys.Contains(testTargetBonus.ID) && opponentBonuses.Keys.Contains(bestTargetBonus.ID)
+                        && opponentBonuses[testTargetBonus.ID].Amount > opponentBonuses[bestTargetBonus.ID].Amount)
+                    {
+                        testTarget = bestTarget;
+                    }
+                }
+            }
+            return bestTarget.ID;
         }
 
     }

@@ -9,7 +9,7 @@ namespace WarLight.Shared.AI.Dalek.Utils
 {
     class MoveArmiesToBorderTask
     {
-        private static readonly String REASON = "TakeTerritoriesTask";
+        private static readonly String REASON = "MoveArmiesToBorderTask";
 
         public MultiMoves CalculateMoveArmiesToBorderMoves(MultiMoves presentMoves)
         {

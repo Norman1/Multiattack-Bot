@@ -24,6 +24,15 @@ namespace WarLight.Shared.AI.Dalek.Debug
             LogAllMoves(moves);
         }
 
+        public static void LogBeginGame()
+        {
+            var territories = GameState.Map.Territories.Values.ToList();
+            foreach(var territory in territories)
+            {
+                AILog.Log("Debug", territory.ID+" --> "+territory.Name);
+            }
+        }
+
         public static void LogAllMoves(MultiMoves multiMoves)
         {
             var deployMoves = multiMoves.DeployMoves;

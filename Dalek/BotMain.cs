@@ -45,6 +45,10 @@ namespace WarLight.Shared.AI.Dalek.Bot
 
         public List<GameOrder> GetOrders()
         {
+            if (GameState.CurrentTurn().NumberOfTurns == 0)
+            {
+                DebugOutput.LogBeginGame();
+            }
             DebugOutput.LogBeginMove();
             MovesChooser movesChooser = new MovesChooser();
             var calculatedMoves = movesChooser.GetMoves();

@@ -125,6 +125,27 @@ namespace WarLight.Shared.AI.Dalek.Evaluation
             return pumpPath;
         }
 
+        // Only yields one path in case there are multiple ones. Also take care in case of circles
+        public List<GameOrderAttackTransfer> GetMovePath(TerritoryIDType attackedTerritory)
+        {
+            List<GameOrderAttackTransfer> movePath = new List<GameOrderAttackTransfer>();
+            var currentAttackTerritory = attackedTerritory;
+            while (true)
+            {
+                var attackingMoves = AttackMoves.Where(a => a.To == currentAttackTerritory).ToList();
+                if (attackingMoves.Count == 0)
+                {
+                    return movePath;
+                }
+                else
+                {
+                    currentAttackTerritory = attackingMoves.First().From;
+                    movePath.Add(attackingMoves.First());
+                }
+
+            }
+        }
+
 
         public Dictionary<TerritoryIDType, TerritoryStanding> GetTerritoryStandingsAfterAllMoves()
         {
