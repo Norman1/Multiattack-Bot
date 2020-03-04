@@ -15,28 +15,38 @@ namespace WarLight.Shared.AI.Dalek.Decision
         {
             List<MultiMoves> allChoices = GetAllMoves();
             MultiMoves bestChoice = GetBestMoves(allChoices);
-            if (bestChoice == null)
-            {
-                bestChoice = new MultiMoves();
-            }
-            bestChoice = new NoPlanAddAddRemainingTask().CalculateNoPlanMoves(bestChoice);
-            bestChoice = new MoveArmiesToBorderTask().CalculateMoveArmiesToBorderMoves(bestChoice);
             return bestChoice;
         }
 
         private List<MultiMoves> GetAllMoves()
         {
-            MultiMoves initialMoves = new MultiMoves();
+            MultiMoves bestMove = new MultiMoves();
             List<MultiMoves> allMoves = new List<MultiMoves>();
-            allMoves.Add(initialMoves);
-            allMoves.AddRange(GetFollowupMoves(initialMoves, 0));
-            MultiMoves bestMove = GetBestMoves(allMoves);
-            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
-            bestMove = GetBestMoves(allMoves);
-            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
-            bestMove = GetBestMoves(allMoves);
-            allMoves.AddRange(GetFollowupMoves(bestMove, 0));
-            return allMoves;
+            int currentCount = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                allMoves.AddRange(GetFollowupMoves(bestMove, 0));
+                if (allMoves.Count == currentCount)
+                {
+                    break;
+                }
+                currentCount = allMoves.Count;
+                bestMove = GetBestMoves(allMoves);
+            }
+
+            if (allMoves.Count == 0)
+            {
+                allMoves.Add(new MultiMoves());
+            }
+
+            var completedMoves = new List<MultiMoves>();
+            foreach (MultiMoves multiMove in allMoves)
+            {
+                var completedMove = new NoPlanAddAddRemainingTask().CalculateNoPlanMoves(multiMove);
+                completedMove = new MoveArmiesToBorderTask().CalculateMoveArmiesToBorderMoves(completedMove);
+                completedMoves.Add(completedMove);
+            }
+            return completedMoves;
         }
 
         // TODO endless recursion for some  reason, so max depth. Probably when multiple choices available
