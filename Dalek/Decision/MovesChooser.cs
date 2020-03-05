@@ -88,6 +88,7 @@ namespace WarLight.Shared.AI.Dalek.Decision
                     bestMoves = multimoves;
                 }
             }
+            bestMoves = new MovesScheduler().CalculateScheduledMoves(bestMoves);
             return bestMoves;
         }
 

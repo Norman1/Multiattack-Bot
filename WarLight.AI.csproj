@@ -92,6 +92,7 @@
     <Compile Include="Dalek\Debug\DebugOutput.cs" />
     <Compile Include="Dalek\Decision\BreakBonusesMultiTask.cs" />
     <Compile Include="Dalek\Decision\MovesChooser.cs" />
+    <Compile Include="Dalek\Decision\MovesScheduler.cs" />
     <Compile Include="Dalek\Decision\NoPlanAddAddRemainingTask.cs" />
     <Compile Include="Dalek\Decision\PicksChooser.cs" />
     <Compile Include="Dalek\Decision\TakeBonusMultiTask.cs" />
